@@ -1,13 +1,64 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Calendar, Clock, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { AlertTriangle, Calendar, Clock, CheckCircle, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { format, differenceInDays, isBefore, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { base44 } from "@/api/base44Client";
 
-export default function PagamentosVencimento({ gastos, onEditGasto }) {
+export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdated }) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [markingAsPaid, setMarkingAsPaid] = useState({});
+  const [paymentDates, setPaymentDates] = useState({});
   const hoje = new Date();
+
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const addOneDay = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString + 'T00:00:00Z');
+    date.setDate(date.getDate() + 1);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleMarkAsPaid = async (gasto, e) => {
+    e.stopPropagation();
+    const gastoId = gasto.id;
+    const dataPagamento = paymentDates[gastoId] || getTodayDate();
+    
+    setMarkingAsPaid(prev => ({ ...prev, [gastoId]: true }));
+    
+    try {
+      await base44.entities.Gasto.update(gastoId, {
+        status_pagamento: 'pago',
+        data_pagamento: addOneDay(dataPagamento)
+      });
+      
+      if (onGastoUpdated) {
+        onGastoUpdated();
+      }
+    } catch (error) {
+      console.error('Erro ao marcar como pago:', error);
+      alert('Erro ao marcar como pago. Tente novamente.');
+    } finally {
+      setMarkingAsPaid(prev => ({ ...prev, [gastoId]: false }));
+    }
+  };
+
+  const handleDateChange = (gastoId, date, e) => {
+    e.stopPropagation();
+    setPaymentDates(prev => ({ ...prev, [gastoId]: date }));
+  };
   
   // Filtrar gastos com base na data de vencimento e status
   const gastosComVencimento = gastos.filter(gasto => 
@@ -47,23 +98,42 @@ export default function PagamentosVencimento({ gastos, onEditGasto }) {
     return (
       <div 
         key={gasto.id} 
-        className={`p-3 rounded-lg border cursor-pointer transition-colors duration-200 ${cores[tipo]}`}
-        onClick={() => onEditGasto && onEditGasto(gasto)}
+        className={`p-3 rounded-lg border transition-colors duration-200 ${cores[tipo]} flex items-start gap-3`}
       >
-        <div className="flex items-start justify-between">
-          <div>
-            <h4 className="font-medium">{gasto.descricao}</h4>
-            <p className="text-sm opacity-75">
-              R$ {gasto.valor.toLocaleString('pt-BR')}
-              {gasto.fornecedor && ` • ${gasto.fornecedor}`}
-            </p>
+        <div className="flex-1 cursor-pointer" onClick={() => onEditGasto && onEditGasto(gasto)}>
+          <h4 className="font-medium">{gasto.descricao}</h4>
+          <p className="text-sm opacity-75">
+            R$ {gasto.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            {gasto.fornecedor && ` • ${gasto.fornecedor}`}
+          </p>
+          <div className="flex items-center gap-1 mt-1 text-sm">
+            <Calendar className="w-3 h-3" />
+            {format(new Date(gasto.data_vencimento), 'dd/MM/yyyy', { locale: ptBR })}
           </div>
-          <div className="text-right text-sm">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              {format(new Date(gasto.data_vencimento), 'dd/MM', { locale: ptBR })}
-            </div>
-          </div>
+        </div>
+        <div className="flex flex-col gap-2 items-end">
+          <Input
+            type="date"
+            value={paymentDates[gasto.id] || getTodayDate()}
+            onChange={(e) => handleDateChange(gasto.id, e.target.value, e)}
+            onClick={(e) => e.stopPropagation()}
+            className="h-8 text-xs w-[130px]"
+          />
+          <Button
+            size="sm"
+            onClick={(e) => handleMarkAsPaid(gasto, e)}
+            disabled={markingAsPaid[gasto.id]}
+            className="bg-green-600 hover:bg-green-700 h-8 text-xs whitespace-nowrap"
+          >
+            {markingAsPaid[gasto.id] ? (
+              'Marcando...'
+            ) : (
+              <>
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Pago
+              </>
+            )}
+          </Button>
         </div>
       </div>
     );
