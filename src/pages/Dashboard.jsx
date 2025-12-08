@@ -281,7 +281,11 @@ export default function Dashboard() {
       </div>
 
       <div className="animate-slideInRight" style={{animationDelay: '0.1s'}}>
-        <PagamentosVencimento gastos={gastosFiltradosParaVisualizacao} onEditGasto={handleEditGasto} />
+        <PagamentosVencimento 
+          gastos={gastosFiltradosParaVisualizacao} 
+          onEditGasto={handleEditGasto}
+          onGastoUpdated={loadData}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
