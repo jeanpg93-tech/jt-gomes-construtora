@@ -635,16 +635,18 @@ export default function Relatorios() {
           }
           
           .print-table .total-row {
-            background: #1e293b !important;
+            background: #e2e8f0 !important;
             font-weight: bold;
+            border: 2px solid #000000 !important;
           }
 
           .print-table .total-row td {
-            color: #ffffff !important;
-            border-color: #1e293b !important;
+            color: #000000 !important;
+            border-color: #000000 !important;
             padding: 7px 4px;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            font-weight: bold !important;
           }
           
           .print-table .subtotal-row {
