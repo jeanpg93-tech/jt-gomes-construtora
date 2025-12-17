@@ -1,36 +1,38 @@
-import Dashboard from './pages/Dashboard';
-import Gastos from './pages/Gastos';
-import Receitas from './pages/Receitas';
-import Relatorios from './pages/Relatorios';
+import ConectarWhatsApp from './pages/ConectarWhatsApp';
 import Configuracoes from './pages/Configuracoes';
+import Contratos from './pages/Contratos';
+import Dashboard from './pages/Dashboard';
+import Fornecedores from './pages/Fornecedores';
+import Gastos from './pages/Gastos';
+import GastosAdministrativos from './pages/GastosAdministrativos';
+import GerenciamentoUsuarios from './pages/GerenciamentoUsuarios';
+import Home from './pages/Home';
+import Inicio from './pages/Inicio';
 import Obras from './pages/Obras';
 import Orcamento from './pages/Orcamento';
-import ConectarWhatsApp from './pages/ConectarWhatsApp';
-import GastosAdministrativos from './pages/GastosAdministrativos';
+import Receitas from './pages/Receitas';
 import Recibos from './pages/Recibos';
-import Contratos from './pages/Contratos';
-import Fornecedores from './pages/Fornecedores';
-import Inicio from './pages/Inicio';
-import GerenciamentoUsuarios from './pages/GerenciamentoUsuarios';
+import Relatorios from './pages/Relatorios';
 import SolicitarAcesso from './pages/SolicitarAcesso';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "Gastos": Gastos,
-    "Receitas": Receitas,
-    "Relatorios": Relatorios,
+    "ConectarWhatsApp": ConectarWhatsApp,
     "Configuracoes": Configuracoes,
+    "Contratos": Contratos,
+    "Dashboard": Dashboard,
+    "Fornecedores": Fornecedores,
+    "Gastos": Gastos,
+    "GastosAdministrativos": GastosAdministrativos,
+    "GerenciamentoUsuarios": GerenciamentoUsuarios,
+    "Home": Home,
+    "Inicio": Inicio,
     "Obras": Obras,
     "Orcamento": Orcamento,
-    "ConectarWhatsApp": ConectarWhatsApp,
-    "GastosAdministrativos": GastosAdministrativos,
+    "Receitas": Receitas,
     "Recibos": Recibos,
-    "Contratos": Contratos,
-    "Fornecedores": Fornecedores,
-    "Inicio": Inicio,
-    "GerenciamentoUsuarios": GerenciamentoUsuarios,
+    "Relatorios": Relatorios,
     "SolicitarAcesso": SolicitarAcesso,
 }
 
