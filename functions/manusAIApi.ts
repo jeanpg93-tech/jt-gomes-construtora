@@ -7,9 +7,8 @@ Deno.serve(async (req) => {
         // Verificação do Segredo (Chave API)
         const body = await req.json();
         const providedSecret = req.headers.get("x-api-secret") || body.secret;
-        const validSecret = Deno.env.get("MANUS_AI_API_SECRET") || "J&T_GOMES_CONSTRUTORA_API";
 
-        if (providedSecret !== validSecret) {
+        if (providedSecret !== "J&T_GOMES_CONSTRUTORA_API") {
             return Response.json({ error: 'Unauthorized: Invalid API Secret' }, { status: 401 });
         }
 
