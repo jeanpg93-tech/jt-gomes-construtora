@@ -14,8 +14,9 @@ import {
   Briefcase,
   FileText,
   FileSignature,
-  User, // Added User icon
-  Users // Added Users icon for user management
+  User,
+  Users,
+  Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
