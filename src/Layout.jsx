@@ -79,7 +79,7 @@ const navigationItems = [
     adminOnly: true, // Only visible to admins
   },
   {
-    title: "API Manus IA",
+    title: "API",
     url: createPageUrl("ManusAPIKey"),
     icon: Bot,
     adminOnly: true,
