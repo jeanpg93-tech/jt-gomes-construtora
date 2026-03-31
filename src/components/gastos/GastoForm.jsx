@@ -87,8 +87,22 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   }, [fornecedoresInicial]);
 
   useEffect(() => {
-    setFormData(prev => ({ ...prev, subcategoria_id: '' }));
-  }, [formData.categoria_id]);
+    setFormData(prev => {
+      if (!prev.categoria_id) {
+        return { ...prev, subcategoria_id: '' };
+      }
+
+      const subcategoriaAindaExiste = subcategorias.some(
+        sub => sub.id === prev.subcategoria_id && sub.categoria_id === prev.categoria_id
+      );
+
+      if (!prev.subcategoria_id || subcategoriaAindaExiste) {
+        return prev;
+      }
+
+      return { ...prev, subcategoria_id: '' };
+    });
+  }, [formData.categoria_id, subcategorias]);
 
   const loadData = async () => {
     try {
