@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Copy, Eye, EyeOff, CheckCircle, Key, Bot, Code, FileText } from "lucide-react";
 
 const API_KEY = "J&T_GOMES_CONSTRUTORA_API";
@@ -141,7 +140,7 @@ export default function ManusAPIKey() {
           <Bot className="w-7 h-7 text-blue-600" />
           Integração com Abacus IA
         </h1>
-        <p className="text-slate-500 mt-1">Copie os campos abaixo e configure no Abacus IA.</p> e configure no Abacus IA.</p> e preencha no formulário "Adicionar API personalizada" do Manus IA.</p>
+        <p className="text-slate-500 mt-1">Copie os campos abaixo e configure no Abacus IA.</p>
       </div>
 
       {/* Passo a passo */}
