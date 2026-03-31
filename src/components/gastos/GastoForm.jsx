@@ -275,14 +275,14 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                   <Label htmlFor="subcategoria_id">Tipo de {categorias.find(c => c.id === formData.categoria_id)?.nome}</Label>
                   <div className="flex gap-2">
                     <Select 
-                      value={formData.subcategoria_id} 
-                      onValueChange={(value) => handleChange('subcategoria_id', value)}
+                      value={formData.subcategoria_id || '__none__'} 
+                      onValueChange={(value) => handleChange('subcategoria_id', value === '__none__' ? '' : value)}
                     >
                       <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Selecione o tipo (opcional)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={null}>Nenhum</SelectItem>
+                        <SelectItem value="__none__">Nenhum</SelectItem>
                         {subcategoriasDisponiveis.map(sub => (
                           <SelectItem key={sub.id} value={sub.id}>{sub.nome}</SelectItem>
                         ))}
