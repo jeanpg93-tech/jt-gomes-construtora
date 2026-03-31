@@ -234,7 +234,10 @@ export default function Gastos() {
   };
 
   const handleEdit = (gasto) => {
-    setEditingGasto(gasto);
+    setEditingGasto({
+      id: gasto.id,
+      ...(gasto.data || gasto)
+    });
     setShowForm(true);
   };
 
@@ -247,15 +250,15 @@ export default function Gastos() {
   };
 
   const handleDuplicate = (gasto) => {
-    // Remove o ID e a data de criação para criar um novo registro
+    const gastoBase = gasto.data || gasto;
     const gastoDuplicado = {
-      ...gasto,
-      id: undefined, // Explicitly set ID to undefined to ensure it's treated as a new record
+      ...gastoBase,
+      id: undefined,
       created_date: undefined,
       created_by: undefined,
       updated_date: undefined,
-      data: getTodayDate(), // Usa a data de hoje para o duplicado
-      numero_sequencial: undefined // Clear sequential number so a new one is generated
+      data: getTodayDate(),
+      numero_sequencial: undefined
     };
     setEditingGasto(gastoDuplicado);
     setShowForm(true);
