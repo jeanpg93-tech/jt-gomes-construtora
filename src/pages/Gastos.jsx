@@ -216,9 +216,9 @@ export default function Gastos() {
         subcategoria_id: data.subcategoria_id || null,
         etapa_obra_ids: data.etapa_obra_ids && data.etapa_obra_ids.length > 0 ? data.etapa_obra_ids : null,
         valor: parseValor(data.valor),
-        data: addOneDay(data.data),
-        data_vencimento: data.data_vencimento ? addOneDay(data.data_vencimento) : null,
-        data_pagamento: data.data_pagamento ? addOneDay(data.data_pagamento) : null,
+        data: data.data,
+        data_vencimento: data.data_vencimento || null,
+        data_pagamento: data.data_pagamento || null,
         fornecedor_id: data.fornecedor_id || null, // Changed from 'fornecedor' to 'fornecedor_id'
         forma_pagamento: data.forma_pagamento || null,
         status_pagamento: data.status_pagamento,

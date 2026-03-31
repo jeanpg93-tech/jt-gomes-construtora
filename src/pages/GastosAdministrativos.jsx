@@ -92,7 +92,7 @@ export default function GastosAdministrativos() {
         descricao: data.descricao,
         categoria_id: data.categoria_id,
         valor: parseValor(data.valor),
-        data: addOneDay(data.data), // ADICIONAR 1 DIA para compensar timezone
+        data: data.data,
         fornecedor_id: data.fornecedor_id || null,
         forma_pagamento: data.forma_pagamento || null,
         status_pagamento: data.status_pagamento,
