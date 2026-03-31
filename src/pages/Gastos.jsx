@@ -35,17 +35,6 @@ export default function Gastos() {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [viewMode, setViewMode] = useState('grid');
 
-  // Função para adicionar 1 dia à data (movida para o escopo do componente para reuso)
-  const addOneDay = (dateString) => {
-    if (!dateString) return null;
-    // Criar a data com fuso horário UTC para evitar problemas de fuso horário
-    const date = new Date(dateString + 'T00:00:00Z'); // Assumir que a data é local, mas tratar como UTC para adição
-    date.setDate(date.getDate() + 1);
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
 
   const verificarEAtualizarGastosAtrasados = async (gastosList) => {
     const hoje = new Date();
