@@ -10,6 +10,9 @@ import { X, Save } from "lucide-react";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
+  if (typeof dateString === 'string' && dateString.includes('T')) {
+    return dateString.split('T')[0];
+  }
   if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return dateString;
   }
