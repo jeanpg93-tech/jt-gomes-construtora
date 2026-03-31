@@ -15,34 +15,55 @@ Esta API permite acessar e gerenciar dados do sistema de obras. Use-a para consu
 A URL da função está disponível no painel Base44 em: Dashboard → Code → Functions → manusAIApi
 
 ## Autenticação
-Envie a chave no header: x-api-secret
-Ou no campo "secret" do body JSON.
+Envie a chave em um dos formatos:
+- Header: x-api-key, x-api-secret, ou Authorization: Bearer <chave>
+- Body JSON: { "secret": "<chave>" }
 
-## Estrutura da Requisição (POST, body JSON)
+## Formato da Requisição (POST, body JSON)
 {
   "secret": "<API_KEY>",
-  "entityName": "<nome da entidade>",
-  "operation": "<operação>",
+  "endpoint": "<endpoint>",
   "payload": { ... }
 }
 
-## Entidades disponíveis
-Obra, Gasto, Receita, Fornecedor, GastoAdministrativo, CategoriaGasto, CategoriaReceita, SubcategoriaGasto, SubcategoriaGasto2, EtapaObra, Contrato, Recibo, Pessoa
+## Endpoints Semânticos Disponíveis
 
-## Operações suportadas
-- list: listar registros (payload: { limit, sort, skip })
-- get: buscar por ID (payload: { id })
-- create: criar registro (payload: { data: {...} })
-- update: atualizar (payload: { id, data: {...} })
-- delete: deletar (payload: { id })
-- filter: filtrar com query (payload: { query: {...}, sort, limit })
-- bulkCreate: criar vários (payload: { data: [...] })
+### OBRAS
+- endpoint: "/obras" — listar obras ativas (para vincular despesas)
 
-## Exemplo
-POST <URL_DA_FUNCAO>
-Body: { "secret": "<API_KEY>", "entityName": "Obra", "operation": "list", "payload": { "limit": 10 } }`;
+### BOLETOS / CONTAS A PAGAR (entidade Gasto com vencimento)
+- endpoint: "/boletos" — listar boletos
+  payload: { status: "pendente"|"pago"|"vencidos", obra_id, vencimento_de, vencimento_ate, limit }
+- endpoint: "/boletos/id" — detalhes de um boleto
+  payload: { id }
+- endpoint: "/boletos/criar" — criar novo boleto
+  payload: { descricao, valor, vencimento, obra_id, categoria_id, fornecedor_id }
+- endpoint: "/boletos/pagar" — dar baixa / marcar como pago
+  payload: { id, data_pagamento (opcional), forma_pagamento (opcional) }
+- endpoint: "/boletos/deletar" — remover boleto
+  payload: { id }
+
+### COMPRAS / DESPESAS
+- endpoint: "/compras" — listar compras/despesas
+  payload: { obra_id, categoria_id, limit }
+- endpoint: "/compras/criar" — registrar nova compra
+  payload: { descricao, valor, data, obra_id, categoria_id, fornecedor_id, subcategoria_id, etapa_obra_ids }
+
+## CRUD Genérico (para qualquer entidade)
+{
+  "secret": "<API_KEY>",
+  "entityName": "Obra",
+  "operation": "list",
+  "payload": { "limit": 10 }
+}
+Entidades: Obra, Gasto, Receita, Fornecedor, GastoAdministrativo, CategoriaGasto, CategoriaReceita, SubcategoriaGasto, SubcategoriaGasto2, EtapaObra, Contrato, Recibo, Pessoa
+Operações: list, get, create, update, delete, filter, bulkCreate
+
+## Formato de Resposta
+{ "success": true, "data": [...], "message": "..." }`;
 
 const FIELDS = [
+
   {
     label: "Nome",
     value: "J&T Gomes Construtora API",
