@@ -145,7 +145,7 @@ export default function ManusAPIKey() {
       <div>
         <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
           <Bot className="w-7 h-7 text-blue-600" />
-          Integração com Manus IA
+          Integração com Abacus IA
         </h1>
         <p className="text-slate-500 mt-1">Copie os campos abaixo e preencha no formulário "Adicionar API personalizada" do Manus IA.</p>
       </div>
@@ -155,16 +155,16 @@ export default function ManusAPIKey() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm text-blue-800 flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Como configurar no Manus IA
+            Como configurar no Abacus IA
           </CardTitle>
         </CardHeader>
         <CardContent>
           <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
-            <li>No Manus IA, abra <strong>"Adicionar API personalizada"</strong></li>
-            <li>Preencha o campo <strong>Nome</strong> com o valor abaixo</li>
-            <li>Cole a <strong>Nota</strong> com toda a documentação</li>
-            <li>Em <strong>Segredos</strong>, adicione o nome e valor do segredo</li>
-            <li>Salve e pronto — o Manus saberá como usar a API!</li>
+            <li>No Abacus IA, vá em <strong>"Add Custom API"</strong> ou <strong>"Integrations"</strong></li>
+            <li>Cole a <strong>URL do endpoint</strong> da função</li>
+            <li>Configure a autenticação com o <strong>header x-api-key</strong> ou envie <code>"secret"</code> no body</li>
+            <li>Use o <strong>valor do segredo</strong> abaixo como chave</li>
+            <li>Salve e teste com o endpoint <code>/obras</code>!</li>
           </ol>
         </CardContent>
       </Card>
@@ -189,7 +189,7 @@ export default function ManusAPIKey() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <Key className="w-4 h-4 text-slate-600" />
-            Campos para preencher no Manus IA
+            Campos para preencher no Abacus IA Manus IA
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
