@@ -18,6 +18,21 @@ function err(message, status = 400) {
     return Response.json({ success: false, error: message }, { status });
 }
 
+// Helper: busca todos os registros paginando internamente
+async function fetchAll(entityClient, query = {}, sort = null) {
+    const all = [];
+    let skip = 0;
+    const batchSize = 100;
+    while (true) {
+        const batch = await entityClient.filter(query, sort, batchSize, skip);
+        if (!batch || batch.length === 0) break;
+        all.push(...batch);
+        if (batch.length < batchSize) break;
+        skip += batchSize;
+    }
+    return all;
+}
+
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
@@ -68,7 +83,7 @@ Deno.serve(async (req) => {
             return ok(boleto);
         }
 
-        // POST /boletos — criar boleto (Gasto com vencimento)
+        // POST /boletos/criar — criar boleto (Gasto com vencimento)
         if (endpoint === "/boletos/criar" || endpoint === "boletos/criar") {
             const { descricao, valor, vencimento, fornecedor_id, categoria_id, obra_id } = payload || {};
             if (!descricao || !valor || !obra_id || !categoria_id) {
@@ -87,7 +102,7 @@ Deno.serve(async (req) => {
             return ok(boleto, "Boleto criado com sucesso");
         }
 
-        // PUT /boletos/:id/pagar — dar baixa no boleto
+        // PUT /boletos/pagar — dar baixa no boleto
         if (endpoint === "/boletos/pagar" || endpoint === "boletos/pagar") {
             if (!payload?.id) return err("id é obrigatório");
             const hoje = new Date().toISOString().split('T')[0];
@@ -99,11 +114,21 @@ Deno.serve(async (req) => {
             return ok(atualizado, "Boleto marcado como pago");
         }
 
-        // DELETE /boletos/:id — remover boleto
+        // DELETE /boletos/deletar — remover boleto
         if (endpoint === "/boletos/deletar" || endpoint === "boletos/deletar") {
             if (!payload?.id) return err("id é obrigatório");
             await entities.Gasto.delete(payload.id);
             return ok({ id: payload.id }, "Boleto removido com sucesso");
+        }
+
+        // GET /gastos/todos — retornar TODOS os gastos sem limite (pagina internamente)
+        if (endpoint === "/gastos/todos" || endpoint === "gastos/todos") {
+            const { obra_id, categoria_id } = payload || {};
+            let query = {};
+            if (obra_id) query.obra_id = obra_id;
+            if (categoria_id) query.categoria_id = categoria_id;
+            const todos = await fetchAll(entities.Gasto, query, '-data');
+            return ok(todos, `${todos.length} gastos encontrados (total)`);
         }
 
         // GET /compras — listar compras/despesas
@@ -116,7 +141,7 @@ Deno.serve(async (req) => {
             return ok(compras, `${compras.length} compras encontradas`);
         }
 
-        // POST /compras — registrar nova compra/despesa
+        // POST /compras/criar — registrar nova compra/despesa
         if (endpoint === "/compras/criar" || endpoint === "compras/criar") {
             const { descricao, valor, data, fornecedor_id, obra_id, categoria_id, subcategoria_id, etapa_obra_ids } = payload || {};
             if (!descricao || !valor || !obra_id || !categoria_id) {
@@ -139,8 +164,6 @@ Deno.serve(async (req) => {
         // ─── GENERIC ENTITY CRUD (backward compatibility) ─────────────────────
 
         if (entityName && operation) {
-            if (!entityName || !operation) return err("entityName e operation são obrigatórios");
-
             const entityClient = entities[entityName];
             if (!entityClient) return err(`Entidade "${entityName}" não encontrada`, 404);
 
@@ -170,10 +193,20 @@ Deno.serve(async (req) => {
                     result = await entityClient.delete(payload.id);
                     break;
                 case 'filter':
-                    result = await entityClient.filter(payload?.query || {}, payload?.sort, payload?.limit);
+                    result = await entityClient.filter(payload?.query || {}, payload?.sort, payload?.limit, payload?.skip);
                     break;
+                case 'listAll':
+                    // Busca TODOS os registros paginando internamente — sem limite de 100
+                    result = await fetchAll(entityClient, payload?.query || {}, payload?.sort);
+                    break;
+                case 'count': {
+                    // Conta todos os registros
+                    const all = await fetchAll(entityClient, payload?.query || {});
+                    result = { total: all.length };
+                    break;
+                }
                 default:
-                    return err(`Operação "${operation}" não suportada. Use: list, get, create, bulkCreate, update, delete, filter`);
+                    return err(`Operação "${operation}" não suportada. Use: list, get, create, bulkCreate, update, delete, filter, listAll, count`);
             }
             return ok(result);
         }
