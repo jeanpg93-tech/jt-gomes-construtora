@@ -63,27 +63,21 @@ Operações: list, get, create, update, delete, filter, bulkCreate
 { "success": true, "data": [...], "message": "..." }`;
 
 const FIELDS = [
-
   {
     label: "Nome",
     value: "J&T Gomes Construtora API",
-    desc: "Nome para identificar a API no Manus IA"
+    desc: "Nome para identificar a API no Abacus IA"
   },
   {
     label: "Nota (documentação)",
     value: NOTA_API,
-    desc: "Cole no campo 'Nota' — instrui o Manus sobre como usar a API",
+    desc: "Cole no campo 'Nota' — instrui o Abacus sobre como usar a API",
     multiline: true
   },
   {
-    label: "Nome do Segredo",
-    value: "API_SECRET",
-    desc: "Preencha em 'Nome do segredo' dentro de Segredos (Variáveis de Ambiente)"
-  },
-  {
-    label: "Valor do Segredo",
+    label: "Chave de Acesso (API Key)",
     value: API_KEY,
-    desc: "Preencha em 'Valor' dentro de Segredos (Variáveis de Ambiente)",
+    desc: "Use no header x-api-key ou no body como \"secret\"",
     sensitive: true
   },
 ];
@@ -147,7 +141,7 @@ export default function ManusAPIKey() {
           <Bot className="w-7 h-7 text-blue-600" />
           Integração com Abacus IA
         </h1>
-        <p className="text-slate-500 mt-1">Copie os campos abaixo e preencha no formulário "Adicionar API personalizada" do Manus IA.</p>
+        <p className="text-slate-500 mt-1">Copie os campos abaixo e configure no Abacus IA.</p> e configure no Abacus IA.</p> e preencha no formulário "Adicionar API personalizada" do Manus IA.</p>
       </div>
 
       {/* Passo a passo */}
@@ -189,7 +183,7 @@ export default function ManusAPIKey() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <Key className="w-4 h-4 text-slate-600" />
-            Campos para preencher no Abacus IA Manus IA
+            Campos para configurar no Abacus IA
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
