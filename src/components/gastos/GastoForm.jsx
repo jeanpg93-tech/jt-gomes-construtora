@@ -64,27 +64,6 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   const [etapasObra, setEtapasObra] = useState(etapasObraInicial);
   const [fornecedores, setFornecedores] = useState(fornecedoresInicial); // Initialize from prop
 
-  useEffect(() => {
-    const dataRegistroAtual = gasto?.data ? formatDateForInput(gasto.data) : getTodayDate();
-
-    setFormData({
-      numero_sequencial: gasto?.numero_sequencial || '',
-      obra_id: gasto?.obra_id || '',
-      descricao: gasto?.descricao || '',
-      categoria_id: gasto?.categoria_id || '',
-      subcategoria_id: gasto?.subcategoria_id || '',
-      etapa_obra_ids: gasto?.etapa_obra_ids || [],
-      valor: gasto?.valor || '',
-      data: dataRegistroAtual,
-      data_vencimento: gasto?.data_vencimento ? formatDateForInput(gasto.data_vencimento) : '',
-      data_pagamento: gasto?.data_pagamento ? formatDateForInput(gasto.data_pagamento) : '',
-      fornecedor_id: gasto?.fornecedor_id || '',
-      forma_pagamento: gasto?.forma_pagamento || '',
-      status_pagamento: gasto?.status_pagamento || 'pendente',
-      observacoes: gasto?.observacoes || '',
-      origem_registro: 'web'
-    });
-  }, [gasto]);
 
   // Estados para modais de criação rápida
   const [modalCategoria, setModalCategoria] = useState(false);
@@ -109,22 +88,31 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   }, [fornecedoresInicial]);
 
   useEffect(() => {
+    if (!gasto) {
+      setFormData(prev => ({ ...prev, subcategoria_id: '' }));
+      return;
+    }
+
+    const subcategoriaPertenceACategoria = subcategorias.some(
+      sub => sub.id === gasto.subcategoria_id && sub.categoria_id === gasto.categoria_id
+    );
+
     setFormData(prev => {
       if (!prev.categoria_id) {
         return { ...prev, subcategoria_id: '' };
       }
 
-      const subcategoriaAindaExiste = subcategorias.some(
-        sub => sub.id === prev.subcategoria_id && sub.categoria_id === prev.categoria_id
-      );
-
-      if (!prev.subcategoria_id || subcategoriaAindaExiste) {
+      if (prev.subcategoria_id) {
         return prev;
       }
 
-      return { ...prev, subcategoria_id: '' };
+      if (gasto.categoria_id === prev.categoria_id && subcategoriaPertenceACategoria) {
+        return { ...prev, subcategoria_id: gasto.subcategoria_id };
+      }
+
+      return prev;
     });
-  }, [formData.categoria_id, subcategorias]);
+  }, [formData.categoria_id, subcategorias, gasto]);
 
   const loadData = async () => {
     try {
@@ -207,10 +195,6 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   const subcategoriasDisponiveis = formData.categoria_id
     ? subcategorias.filter(sub => sub.categoria_id === formData.categoria_id)
     : [];
-
-  const subcategoriaSelecionadaExiste = subcategoriasDisponiveis.some(
-    sub => sub.id === formData.subcategoria_id
-  );
     
   const isStatusProgramado = formData.status_pagamento === 'programado';
   const isStatusPago = formData.status_pagamento === 'pago';
@@ -301,7 +285,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                   <Label htmlFor="subcategoria_id">Tipo de {categorias.find(c => c.id === formData.categoria_id)?.nome}</Label>
                   <div className="flex gap-2">
                     <Select 
-                      value={subcategoriaSelecionadaExiste ? formData.subcategoria_id : '__none__'} 
+                      value={formData.subcategoria_id || '__none__'} 
                       onValueChange={(value) => handleChange('subcategoria_id', value === '__none__' ? '' : value)}
                     >
                       <SelectTrigger className="flex-1">
