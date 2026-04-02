@@ -262,7 +262,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-        <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto my-8 bg-white">
+        <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto my-8 bg-white">
           <CardHeader className="border-b border-slate-100">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl font-bold text-slate-800">
