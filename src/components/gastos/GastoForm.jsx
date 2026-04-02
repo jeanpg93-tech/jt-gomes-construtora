@@ -97,6 +97,30 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   }, [fornecedoresInicial]);
 
   useEffect(() => {
+    const loadParcelasExistentes = async () => {
+      if (!gasto?.id || !gasto?.eh_recorrente) {
+        setParcelas([]);
+        return;
+      }
+
+      const parcelasExistentes = await base44.entities.ParcelaGasto.filter({ gasto_id: gasto.id });
+      const parcelasOrdenadas = parcelasExistentes
+        .sort((a, b) => (a.numero_parcela || 0) - (b.numero_parcela || 0))
+        .map((parcela) => ({
+          numero_parcela: parcela.numero_parcela,
+          valor: parcela.valor ?? '',
+          data_vencimento: parcela.data_vencimento ? formatDateForInput(parcela.data_vencimento) : '',
+          data_pagamento: parcela.data_pagamento ? formatDateForInput(parcela.data_pagamento) : '',
+          status: parcela.status || 'programado'
+        }));
+
+      setParcelas(parcelasOrdenadas);
+    };
+
+    loadParcelasExistentes();
+  }, [gasto]);
+
+  useEffect(() => {
     if (!gasto) {
       setFormData(prev => ({ ...prev, subcategoria_id: '' }));
       return;
@@ -212,13 +236,14 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
       const diaFinal = Math.min(diaReferencia, ultimoDia);
       const data = new Date(current.getFullYear(), current.getMonth(), diaFinal);
       const dataVencimento = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
+      const parcelaExistente = parcelas.find((item) => item.numero_parcela === index + 1);
 
       return {
         numero_parcela: index + 1,
-        valor: valorParcelaCalculado,
-        data_vencimento: dataVencimento,
-        data_pagamento: '',
-        status: 'programado'
+        valor: parcelaExistente?.valor ?? valorParcelaCalculado,
+        data_vencimento: parcelaExistente?.data_vencimento || dataVencimento,
+        data_pagamento: parcelaExistente?.data_pagamento || '',
+        status: parcelaExistente?.status || 'programado'
       };
     });
 
