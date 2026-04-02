@@ -6,6 +6,7 @@ export default function ResumoRecorrencia({ gasto, parcelas = [] }) {
 
   const total = Number(gasto.valor_total_recorrencia || 0);
   const entrada = Number(gasto.valor_entrada || 0);
+  const dataEntrada = gasto.data_entrada;
   const pagoParcelas = parcelas
     .filter((item) => item.status === 'pago')
     .reduce((sum, item) => sum + Number(item.valor || 0), 0);
@@ -18,10 +19,12 @@ export default function ResumoRecorrencia({ gasto, parcelas = [] }) {
         <Badge className="bg-blue-100 text-blue-800 border border-blue-200">Recorrente</Badge>
         <Badge variant="outline">{parcelas.length || gasto.quantidade_parcelas || 0} parcelas</Badge>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
         <div><span className="text-slate-500">Total:</span> <span className="font-semibold">R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+        <div><span className="text-slate-500">Entrada:</span> <span className="font-semibold">R$ {entrada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
         <div><span className="text-slate-500">Pago:</span> <span className="font-semibold text-green-700">R$ {pagoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
         <div><span className="text-slate-500">Falta:</span> <span className="font-semibold text-red-700">R$ {restante.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+        {dataEntrada && <div className="sm:col-span-2 lg:col-span-4"><span className="text-slate-500">Data da entrada:</span> <span className="font-semibold">{dataEntrada.split('-').reverse().join('/')}</span></div>}
       </div>
     </div>
   );

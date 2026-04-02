@@ -101,6 +101,11 @@
       "type": "number",
       "description": "Valor da entrada j\u00e1 paga, se houver"
     },
+    "data_entrada": {
+      "type": "string",
+      "format": "date",
+      "description": "Data em que a entrada foi paga"
+    },
     "quantidade_parcelas": {
       "type": "number",
       "description": "Quantidade total de parcelas"

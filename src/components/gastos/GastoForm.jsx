@@ -61,6 +61,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
     eh_recorrente: gasto?.eh_recorrente || false,
     valor_total_recorrencia: gasto?.valor_total_recorrencia || '',
     valor_entrada: gasto?.valor_entrada || '',
+    data_entrada: gasto?.data_entrada ? formatDateForInput(gasto.data_entrada) : '',
     quantidade_parcelas: gasto?.quantidade_parcelas || ''
   });
 
@@ -155,6 +156,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
       eh_recorrente: !!formData.eh_recorrente,
       valor_total_recorrencia: formData.eh_recorrente && formData.valor_total_recorrencia ? Number(formData.valor_total_recorrencia) : null,
       valor_entrada: formData.eh_recorrente && formData.valor_entrada !== '' ? Number(formData.valor_entrada) : null,
+      data_entrada: formData.eh_recorrente && formData.data_entrada ? formData.data_entrada : null,
       quantidade_parcelas: formData.eh_recorrente && formData.quantidade_parcelas ? Number(formData.quantidade_parcelas) : null,
       // arquivo_anexo removed
       subcategoria_id: formData.subcategoria_id || null,
@@ -458,7 +460,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
 
                 {formData.eh_recorrente && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
                       <div className="space-y-2">
                         <Label htmlFor="valor_total_recorrencia">Valor total</Label>
                         <Input
@@ -481,6 +483,15 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                           value={formData.valor_entrada}
                           onChange={(e) => handleChange('valor_entrada', e.target.value)}
                           placeholder="0.00"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="data_entrada">Data da entrada</Label>
+                        <Input
+                          id="data_entrada"
+                          type="date"
+                          value={formData.data_entrada}
+                          onChange={(e) => handleChange('data_entrada', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">

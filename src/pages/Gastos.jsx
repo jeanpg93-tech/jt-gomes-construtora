@@ -217,6 +217,7 @@ export default function Gastos() {
         eh_recorrente: !!data.eh_recorrente,
         valor_total_recorrencia: data.eh_recorrente && data.valor_total_recorrencia !== null && data.valor_total_recorrencia !== '' ? parseValor(data.valor_total_recorrencia) : null,
         valor_entrada: data.eh_recorrente && data.valor_entrada !== null && data.valor_entrada !== '' ? parseValor(data.valor_entrada) : null,
+        data_entrada: data.eh_recorrente && data.data_entrada ? data.data_entrada : null,
         quantidade_parcelas: data.eh_recorrente && data.quantidade_parcelas ? Number(data.quantidade_parcelas) : null
       };
       
