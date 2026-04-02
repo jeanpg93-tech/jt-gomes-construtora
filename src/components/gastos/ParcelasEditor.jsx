@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Wand2 } from "lucide-react";
+import { CalendarDays, Wand2, ArrowRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function ParcelasEditor({
@@ -132,7 +132,19 @@ export default function ParcelasEditor({
                   </Select>
                 </div>
                 <div className="space-y-2 min-w-0">
-                  <Label>Data de pagamento</Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>Data de pagamento</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-blue-700 hover:text-blue-800"
+                      onClick={() => onUpdateParcela(parcela.numero_parcela, 'data_pagamento', parcela.data_vencimento || '')}
+                    >
+                      <ArrowRight className="w-3 h-3 mr-1" />
+                      Igual ao vencimento
+                    </Button>
+                  </div>
                   <Input
                     type="date"
                     value={parcela.data_pagamento || ''}
