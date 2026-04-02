@@ -36,19 +36,31 @@ export function buildFiltersSummary({ obras, categorias, subcategorias, subcateg
   ];
 }
 
-export function buildCategoriaAnalytics({ gastos, categorias, subcategorias }) {
+export function buildCategoriaAnalytics({ gastos, categorias, subcategorias, parcelas = [] }) {
   return categorias
     .map((categoria) => {
       const gastosCategoria = gastos.filter((gasto) => gasto.categoria_id === categoria.id);
       if (!gastosCategoria.length) return null;
 
-      const pagos = gastosCategoria
-        .filter((gasto) => gasto.status_pagamento === 'pago')
-        .reduce((sum, gasto) => sum + Number(gasto.valor || 0), 0);
+      let pagos = 0;
+      let pendentes = 0;
 
-      const pendentes = gastosCategoria
-        .filter((gasto) => ['pendente', 'programado', 'atrasado'].includes(gasto.status_pagamento))
-        .reduce((sum, gasto) => sum + Number(gasto.valor || 0), 0);
+      for (const gasto of gastosCategoria) {
+        if (gasto.eh_recorrente && parcelas.length > 0) {
+          const p = parcelas.filter((parc) => parc.gasto_id === gasto.id);
+          if (p.length > 0) {
+            pagos += p.filter((x) => x.status === 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
+            pendentes += p.filter((x) => x.status !== 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
+            // considerar entrada como pago
+            pagos += Number(gasto.valor_entrada || 0);
+            continue;
+          }
+        }
+        if (gasto.status_pagamento === 'pago') pagos += Number(gasto.valor || 0);
+        else if (['pendente', 'programado', 'atrasado'].includes(gasto.status_pagamento)) pendentes += Number(gasto.valor || 0);
+        // considerar entrada como pago
+        pagos += Number(gasto.valor_entrada || 0);
+      }
 
       const total = pagos + pendentes;
       const categoriaSubcategorias = subcategorias
@@ -57,13 +69,24 @@ export function buildCategoriaAnalytics({ gastos, categorias, subcategorias }) {
           const gastosSub = gastosCategoria.filter((gasto) => gasto.subcategoria_id === subcategoria.id);
           if (!gastosSub.length) return null;
 
-          const subPagos = gastosSub
-            .filter((gasto) => gasto.status_pagamento === 'pago')
-            .reduce((sum, gasto) => sum + Number(gasto.valor || 0), 0);
+          let subPagos = 0;
+          let subPendentes = 0;
 
-          const subPendentes = gastosSub
-            .filter((gasto) => ['pendente', 'programado', 'atrasado'].includes(gasto.status_pagamento))
-            .reduce((sum, gasto) => sum + Number(gasto.valor || 0), 0);
+          for (const gasto of gastosSub) {
+            if (gasto.eh_recorrente && parcelas.length > 0) {
+              const p = parcelas.filter((parc) => parc.gasto_id === gasto.id);
+              if (p.length > 0) {
+                subPagos += p.filter((x) => x.status === 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
+                subPendentes += p.filter((x) => x.status !== 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
+                // entrada
+                subPagos += Number(gasto.valor_entrada || 0);
+                continue;
+              }
+            }
+            if (gasto.status_pagamento === 'pago') subPagos += Number(gasto.valor || 0);
+            else if (['pendente', 'programado', 'atrasado'].includes(gasto.status_pagamento)) subPendentes += Number(gasto.valor || 0);
+            subPagos += Number(gasto.valor_entrada || 0);
+          }
 
           return {
             id: subcategoria.id,

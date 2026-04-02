@@ -30,6 +30,7 @@ export default function Relatorios() {
   const [categoriasGasto, setCategoriasGasto] = useState([]);
   const [subcategoriasGasto, setSubcategoriasGasto] = useState([]);
   const [subcategoriasGasto2, setSubcategoriasGasto2] = useState([]);
+  const [parcelas, setParcelas] = useState([]);
   const [fornecedores, setFornecedores] = useState([]);
   const [etapasObra, setEtapasObra] = useState([]);
   const [workspaceInfo, setWorkspaceInfo] = useState({ name: 'ConstrutoraPro', logoUrl: null, cnpj: null });
@@ -82,7 +83,7 @@ export default function Relatorios() {
 
   const loadData = async () => {
     try {
-      const [obraData, gastoData, receitaData, gastosAdminData, catGastoData, subcatGastoData, subcatGasto2Data, fornecedorData, etapaData] = await Promise.all([
+      const [obraData, gastoData, receitaData, gastosAdminData, catGastoData, subcatGastoData, subcatGasto2Data, parcelaData, fornecedorData, etapaData] = await Promise.all([
         base44.entities.Obra.list('-created_date'),
         base44.entities.Gasto.list(),
         base44.entities.Receita.list(),
@@ -90,6 +91,7 @@ export default function Relatorios() {
         base44.entities.CategoriaGasto.list(),
         base44.entities.SubcategoriaGasto.list(),
         base44.entities.SubcategoriaGasto2.list(),
+        base44.entities.ParcelaGasto.list(),
         base44.entities.Fornecedor.list(),
         base44.entities.EtapaObra.list()
       ]);
@@ -101,6 +103,7 @@ export default function Relatorios() {
       setSubcategoriasGasto(subcatGastoData);
       setSubcategoriasGasto2(subcatGasto2Data);
       setFornecedores(fornecedorData);
+      setParcelas(parcelaData);
       setEtapasObra(etapaData.sort((a, b) => (a.ordem || 999) - (b.ordem || 999)));
     } finally {
       setLoading(false);
@@ -149,6 +152,9 @@ export default function Relatorios() {
   const gastosFiltrados = applyGeneralFilters(gastosComDataFiltrada);
   const gastosAdminFiltrados = filterByDate(gastosAdmin, dataInicio, dataFim, (item) => item.data);
   const receitasFiltradas = applyGeneralFilters(filterByDate(receitas, dataInicio, dataFim, (item) => item.data));
+  const parcelasComDataFiltrada = filterByDate(parcelas, dataInicio, dataFim, (p) => p.data_pagamento || p.data_vencimento);
+  const gastoIdsSelecionados = new Set(gastosFiltrados.map((g) => g.id));
+  const parcelasDoPeriodo = parcelasComDataFiltrada.filter((p) => gastoIdsSelecionados.has(p.gasto_id));
 
   const subcategoriasDisponiveis = selectedCategoriaIds.length === 0 ? [] : subcategoriasGasto.filter((sub) => selectedCategoriaIds.includes(sub.categoria_id));
   const subcategorias2Disponiveis = selectedSubcategoriaIds.length === 0 ? [] : subcategoriasGasto2.filter((sub2) => selectedSubcategoriaIds.includes(sub2.subcategoria_id));
@@ -164,6 +170,7 @@ export default function Relatorios() {
     ),
     categorias: categoriasGasto.filter((categoria) => selectedCategoriaIds.length === 0 || selectedCategoriaIds.includes(categoria.id)),
     subcategorias: subcategoriasGasto,
+    parcelas: parcelasDoPeriodo,
   });
 
   const totalGrafico = categoriaAnalytics.reduce((sum, item) => sum + item.total, 0);
