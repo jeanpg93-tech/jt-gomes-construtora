@@ -46,13 +46,24 @@ export function buildCategoriaAnalytics({ gastos, categorias, subcategorias, par
       let pendentes = 0;
 
       for (const gasto of gastosCategoria) {
-        if (gasto.eh_recorrente && parcelas.length > 0) {
+        if (parcelas.length > 0) {
           const p = parcelas.filter((parc) => parc.gasto_id === gasto.id);
           if (p.length > 0) {
-            pagos += p.filter((x) => x.status === 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
-            pendentes += p.filter((x) => x.status !== 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
-            // considerar entrada como pago
-            pagos += Number(gasto.valor_entrada || 0);
+            const pagosParcelas = p
+              .filter((x) => x.status === 'pago')
+              .reduce((s, x) => s + Number(x.valor || 0), 0);
+            const totalParcelas = p.reduce((s, x) => s + Number(x.valor || 0), 0);
+            let pendentesParcelas = p
+              .filter((x) => x.status !== 'pago')
+              .reduce((s, x) => s + Number(x.valor || 0), 0);
+            if (totalParcelas === 0 && Number(gasto.valor_total_recorrencia || 0) > 0) {
+              pendentesParcelas = Math.max(
+                0,
+                Number(gasto.valor_total_recorrencia || 0) - Number(gasto.valor_entrada || 0) - pagosParcelas
+              );
+            }
+            pagos += pagosParcelas + Number(gasto.valor_entrada || 0);
+            pendentes += pendentesParcelas;
             continue;
           }
         }
@@ -73,13 +84,24 @@ export function buildCategoriaAnalytics({ gastos, categorias, subcategorias, par
           let subPendentes = 0;
 
           for (const gasto of gastosSub) {
-            if (gasto.eh_recorrente && parcelas.length > 0) {
+            if (parcelas.length > 0) {
               const p = parcelas.filter((parc) => parc.gasto_id === gasto.id);
               if (p.length > 0) {
-                subPagos += p.filter((x) => x.status === 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
-                subPendentes += p.filter((x) => x.status !== 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
-                // entrada
-                subPagos += Number(gasto.valor_entrada || 0);
+                const pagosParcelas = p
+                  .filter((x) => x.status === 'pago')
+                  .reduce((s, x) => s + Number(x.valor || 0), 0);
+                const totalParcelas = p.reduce((s, x) => s + Number(x.valor || 0), 0);
+                let pendentesParcelas = p
+                  .filter((x) => x.status !== 'pago')
+                  .reduce((s, x) => s + Number(x.valor || 0), 0);
+                if (totalParcelas === 0 && Number(gasto.valor_total_recorrencia || 0) > 0) {
+                  pendentesParcelas = Math.max(
+                    0,
+                    Number(gasto.valor_total_recorrencia || 0) - Number(gasto.valor_entrada || 0) - pagosParcelas
+                  );
+                }
+                subPagos += pagosParcelas + Number(gasto.valor_entrada || 0);
+                subPendentes += pendentesParcelas;
                 continue;
               }
             }

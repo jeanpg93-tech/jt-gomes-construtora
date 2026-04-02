@@ -152,9 +152,8 @@ export default function Relatorios() {
   const gastosFiltrados = applyGeneralFilters(gastosComDataFiltrada);
   const gastosAdminFiltrados = filterByDate(gastosAdmin, dataInicio, dataFim, (item) => item.data);
   const receitasFiltradas = applyGeneralFilters(filterByDate(receitas, dataInicio, dataFim, (item) => item.data));
-  const parcelasComDataFiltrada = filterByDate(parcelas, dataInicio, dataFim, (p) => p.data_pagamento || p.data_vencimento);
   const gastoIdsSelecionados = new Set(gastosFiltrados.map((g) => g.id));
-  const parcelasDoPeriodo = parcelasComDataFiltrada.filter((p) => gastoIdsSelecionados.has(p.gasto_id));
+  const parcelasSelecionadas = parcelas.filter((p) => gastoIdsSelecionados.has(p.gasto_id));
 
   const subcategoriasDisponiveis = selectedCategoriaIds.length === 0 ? [] : subcategoriasGasto.filter((sub) => selectedCategoriaIds.includes(sub.categoria_id));
   const subcategorias2Disponiveis = selectedSubcategoriaIds.length === 0 ? [] : subcategoriasGasto2.filter((sub2) => selectedSubcategoriaIds.includes(sub2.subcategoria_id));
@@ -170,7 +169,7 @@ export default function Relatorios() {
     ),
     categorias: categoriasGasto.filter((categoria) => selectedCategoriaIds.length === 0 || selectedCategoriaIds.includes(categoria.id)),
     subcategorias: subcategoriasGasto,
-    parcelas: parcelasDoPeriodo,
+    parcelas: parcelasSelecionadas,
   });
 
   const totalGrafico = categoriaAnalytics.reduce((sum, item) => sum + item.total, 0);
