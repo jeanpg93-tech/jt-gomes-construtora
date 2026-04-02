@@ -4,9 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, TrendingDown, Search, DollarSign, Trash2, X, LayoutGrid, List, FileSpreadsheet } from "lucide-react";
+import { Plus, TrendingDown, Search, DollarSign, Trash2, X, LayoutGrid, List, FileSpreadsheet, Clock3 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { isBefore, isToday } from "date-fns";
+import { formatCurrencyBRL, getResumoRecorrencia } from "@/utils/gastosRecorrencia";
 
 import GastoForm from "../components/gastos/GastoForm";
 import GastoCard from "../components/gastos/GastoCard";
@@ -22,6 +23,7 @@ export default function Gastos() {
   const [subcategorias, setSubcategorias] = useState([]);
   const [etapasObra, setEtapasObra] = useState([]);
   const [fornecedores, setFornecedores] = useState([]);
+  const [parcelas, setParcelas] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingGasto, setEditingGasto] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -120,10 +122,14 @@ export default function Gastos() {
       await delay(200);
 
       const gastoData = await base44.entities.Gasto.list('-created_date');
+      await delay(200);
+
+      const parcelasData = await base44.entities.ParcelaGasto.list('-created_date', 10000);
       
       const gastosAtualizados = await verificarEAtualizarGastosAtrasados(gastoData);
       
       setGastos(gastosAtualizados);
+      setParcelas(parcelasData);
       setObras(obraData);
       setCategorias(categoriaData);
       setSubcategorias(subcategoriaData);
@@ -389,7 +395,8 @@ export default function Gastos() {
     let reportText = `Relatório de Gastos (Filtros Atuais)\n`;
     reportText += `--------------------------------------\n`;
     reportText += `Data de Geração: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
-    reportText += `Total de Gastos: R$ ${totalGastos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`;
+    reportText += `Total Pago: ${formatCurrencyBRL(totalGastoPago)}\n`;
+    reportText += `Total Pendente: ${formatCurrencyBRL(totalGastoPendente)}\n`;
     reportText += `Número de Itens: ${filteredGastos.length}\n\n`;
     reportText += `Filtros Aplicados:\n`;
     reportText += `  Obra: ${obraNome}\n`;
@@ -418,7 +425,23 @@ export default function Gastos() {
     return matchesSearch && matchesObra && matchesCategoria && matchesSubcategoria && matchesStatus;
   });
 
-  const totalGastos = filteredGastos.reduce((sum, gasto) => sum + (gasto.valor || 0), 0);
+  const totalGastoPago = filteredGastos.reduce((sum, gasto) => {
+    if (gasto.eh_recorrente) {
+      const resumo = getResumoRecorrencia(gasto, parcelas);
+      return sum + Number(resumo?.pagoTotal || 0);
+    }
+
+    return gasto.status_pagamento === 'pago' ? sum + Number(gasto.valor || 0) : sum;
+  }, 0);
+
+  const totalGastoPendente = filteredGastos.reduce((sum, gasto) => {
+    if (gasto.eh_recorrente) {
+      const resumo = getResumoRecorrencia(gasto, parcelas);
+      return sum + Number(resumo?.pendenteTotal || 0);
+    }
+
+    return gasto.status_pagamento !== 'pago' ? sum + Number(gasto.valor || 0) : sum;
+  }, 0);
 
   // Filtrar subcategorias baseado na categoria selecionada
   const subcategoriasDisponiveis = selectedCategoria === "all" 
@@ -450,13 +473,24 @@ export default function Gastos() {
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="bg-white rounded-lg px-4 py-2 border border-slate-200">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-red-600" />
-              <span className="text-sm font-medium text-slate-600">Total:</span>
-              <span className="lg:text-lg font-bold text-red-600">
-                R$ {totalGastos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="bg-white rounded-lg px-4 py-2 border border-slate-200">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-slate-600">Gasto total pago:</span>
+                <span className="lg:text-lg font-bold text-green-600">
+                  {formatCurrencyBRL(totalGastoPago)}
+                </span>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg px-4 py-2 border border-amber-200 bg-amber-50">
+              <div className="flex items-center gap-2">
+                <Clock3 className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-medium text-slate-700">Total pendente:</span>
+                <span className="lg:text-lg font-bold text-amber-700">
+                  {formatCurrencyBRL(totalGastoPendente)}
+                </span>
+              </div>
             </div>
           </div>
           {!isSelectMode ? (
@@ -623,6 +657,7 @@ export default function Gastos() {
             <GastoCard
               key={gasto.id}
               gasto={gasto}
+              parcelas={parcelas}
               obras={obras}
               categorias={categorias}
               subcategorias={subcategorias}
@@ -644,6 +679,7 @@ export default function Gastos() {
                 <GastoListItem
                   key={gasto.id}
                   gasto={gasto}
+                  parcelas={parcelas}
                   obras={obras}
                   categorias={categorias}
                   subcategorias={subcategorias}

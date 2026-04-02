@@ -10,13 +10,16 @@ import {
   User,
   CreditCard,
   CheckCircle2,
-  GitBranch
+  GitBranch,
+  Repeat,
+  Clock3
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
+import { formatCurrencyBRL, getResumoRecorrencia } from "@/utils/gastosRecorrencia";
 
-export default function GastoCard({ gasto, obras, categorias, subcategorias, etapasObra, fornecedores, onEdit, onDuplicate, isSelectMode, isSelected, onSelectToggle }) {
+export default function GastoCard({ gasto, parcelas, obras, categorias, subcategorias, etapasObra, fornecedores, onEdit, onDuplicate, isSelectMode, isSelected, onSelectToggle }) {
 
   const fornecedor = fornecedores?.find(f => f.id === gasto.fornecedor_id);
   const obra = obras?.find(o => o.id === gasto.obra_id);
@@ -26,6 +29,8 @@ export default function GastoCard({ gasto, obras, categorias, subcategorias, eta
   const etapasDoGasto = (gasto.etapa_obra_ids || [])
     .map(etapaId => etapasObra?.find(e => e.id === etapaId))
     .filter(Boolean);
+
+  const resumoRecorrencia = getResumoRecorrencia(gasto, parcelas);
 
   const getStatusColor = (status) => {
     const colors = {
@@ -129,6 +134,12 @@ export default function GastoCard({ gasto, obras, categorias, subcategorias, eta
               <Badge className={`${getStatusColor(gasto.status_pagamento)} border`}>
                 {getStatusLabel(gasto.status_pagamento)}
               </Badge>
+              {resumoRecorrencia && (
+                <Badge className="bg-violet-100 text-violet-800 border-violet-200 border flex items-center gap-1">
+                  <Repeat className="w-3 h-3" />
+                  Recorrente
+                </Badge>
+              )}
               {getOrigemBadge(gasto.origem_registro || 'web')}
             </div>
             <h3 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
@@ -167,7 +178,7 @@ export default function GastoCard({ gasto, obras, categorias, subcategorias, eta
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-red-600" />
             <span className="text-2xl font-bold text-red-600">
-              R$ {(gasto.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrencyBRL(gasto.valor || 0)}
             </span>
           </div>
           <div className="flex items-center gap-1 text-sm text-slate-600">
@@ -175,6 +186,46 @@ export default function GastoCard({ gasto, obras, categorias, subcategorias, eta
             {formatDate(gasto.data_pagamento || gasto.data)}
           </div>
         </div>
+
+        {resumoRecorrencia && (
+          <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-violet-800 font-semibold">
+                <Repeat className="w-4 h-4" />
+                Resumo da recorrência
+              </div>
+              <Badge variant="outline" className="border-violet-300 text-violet-700 bg-white">
+                {resumoRecorrencia.quantidadeParcelas} parcelas
+              </Badge>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+              <div className="rounded-lg bg-white/80 p-2 border border-violet-100">
+                <p className="text-slate-500">Total pago</p>
+                <p className="font-bold text-green-700">{formatCurrencyBRL(resumoRecorrencia.pagoTotal)}</p>
+              </div>
+              <div className="rounded-lg bg-white/80 p-2 border border-violet-100">
+                <p className="text-slate-500">Falta pagar</p>
+                <p className="font-bold text-amber-700">{formatCurrencyBRL(resumoRecorrencia.pendenteTotal)}</p>
+              </div>
+              <div className="rounded-lg bg-white/80 p-2 border border-violet-100">
+                <p className="text-slate-500">Valor total</p>
+                <p className="font-bold text-violet-800">{formatCurrencyBRL(resumoRecorrencia.total)}</p>
+              </div>
+            </div>
+            {resumoRecorrencia.proximaParcela && (
+              <div className="flex items-center justify-between gap-3 rounded-lg bg-white/80 p-3 border border-violet-100">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Próxima parcela</p>
+                  <p className="font-semibold text-slate-800">Parcela {resumoRecorrencia.proximaParcela.numero_parcela}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-violet-800">{formatCurrencyBRL(resumoRecorrencia.proximaParcela.valor)}</p>
+                  <p className="text-sm text-slate-600 flex items-center gap-1 justify-end"><Clock3 className="w-3 h-3" /> {formatDate(resumoRecorrencia.proximaData)}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {etapasDoGasto.length > 0 && (
           <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
