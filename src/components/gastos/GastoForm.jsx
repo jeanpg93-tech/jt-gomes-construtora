@@ -10,6 +10,7 @@ import { X, Save, Calendar as CalendarIcon, Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 import CriacaoRapidaModal from "./CriacaoRapidaModal";
+import ParcelasEditor from "./ParcelasEditor";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
@@ -67,6 +68,9 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   const [subcategorias, setSubcategorias] = useState([]);
   const [etapasObra, setEtapasObra] = useState(etapasObraInicial);
   const [fornecedores, setFornecedores] = useState(fornecedoresInicial); // Initialize from prop
+  const [diaFixoParcelas, setDiaFixoParcelas] = useState('');
+  const [dataInicioParcelas, setDataInicioParcelas] = useState(gasto?.data_vencimento ? formatDateForInput(gasto.data_vencimento) : '');
+  const [parcelas, setParcelas] = useState([]);
 
 
   // Estados para modais de criação rápida
@@ -155,7 +159,8 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
       // arquivo_anexo removed
       subcategoria_id: formData.subcategoria_id || null,
       etapa_obra_ids: formData.etapa_obra_ids.length > 0 ? formData.etapa_obra_ids : null,
-      origem_registro: 'web'
+      origem_registro: 'web',
+      parcelas_recorrencia: formData.eh_recorrente ? parcelas : []
     };
 
     onSave(processedData);
@@ -173,6 +178,36 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
         : [...currentEtapas, etapaId];
       return { ...prev, etapa_obra_ids: newEtapas };
     });
+  };
+
+  const generateParcelas = () => {
+    const quantidade = Number(formData.quantidade_parcelas || 0);
+    if (!quantidade) return;
+
+    const baseDate = dataInicioParcelas || getTodayDate();
+    const [year, month, day] = baseDate.split('-').map(Number);
+    const diaReferencia = Number(diaFixoParcelas || day);
+
+    const novasParcelas = Array.from({ length: quantidade }, (_, index) => {
+      const current = new Date(year, month - 1 + index, 1);
+      const ultimoDia = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
+      const diaFinal = Math.min(diaReferencia, ultimoDia);
+      const data = new Date(current.getFullYear(), current.getMonth(), diaFinal);
+      const dataVencimento = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
+
+      return {
+        numero_parcela: index + 1,
+        valor: Number(formData.valor || 0),
+        data_vencimento: dataVencimento,
+        status: 'programado'
+      };
+    });
+
+    setParcelas(novasParcelas);
+  };
+
+  const updateParcela = (numeroParcela, field, value) => {
+    setParcelas((prev) => prev.map((item) => item.numero_parcela === numeroParcela ? { ...item, [field]: value } : item));
   };
 
   // Removed handleFileUpload, handleRemoveFile, getFileName functions
@@ -405,42 +440,56 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                 </div>
 
                 {formData.eh_recorrente && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="valor_total_recorrencia">Valor total</Label>
-                      <Input
-                        id="valor_total_recorrencia"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.valor_total_recorrencia}
-                        onChange={(e) => handleChange('valor_total_recorrencia', e.target.value)}
-                        placeholder="0.00"
-                      />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="valor_total_recorrencia">Valor total</Label>
+                        <Input
+                          id="valor_total_recorrencia"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={formData.valor_total_recorrencia}
+                          onChange={(e) => handleChange('valor_total_recorrencia', e.target.value)}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="valor_entrada">Entrada</Label>
+                        <Input
+                          id="valor_entrada"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={formData.valor_entrada}
+                          onChange={(e) => handleChange('valor_entrada', e.target.value)}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="quantidade_parcelas">Parcelas</Label>
+                        <Input
+                          id="quantidade_parcelas"
+                          type="number"
+                          min="1"
+                          value={formData.quantidade_parcelas}
+                          onChange={(e) => handleChange('quantidade_parcelas', e.target.value)}
+                          placeholder="Ex: 10"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="valor_entrada">Entrada</Label>
-                      <Input
-                        id="valor_entrada"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.valor_entrada}
-                        onChange={(e) => handleChange('valor_entrada', e.target.value)}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="quantidade_parcelas">Parcelas</Label>
-                      <Input
-                        id="quantidade_parcelas"
-                        type="number"
-                        min="1"
-                        value={formData.quantidade_parcelas}
-                        onChange={(e) => handleChange('quantidade_parcelas', e.target.value)}
-                        placeholder="Ex: 10"
-                      />
-                    </div>
+                    <ParcelasEditor
+                      parcelas={parcelas}
+                      quantidadeParcelas={formData.quantidade_parcelas}
+                      onChangeQuantidade={(value) => handleChange('quantidade_parcelas', value)}
+                      onGenerate={generateParcelas}
+                      onUpdateParcela={updateParcela}
+                      diaFixo={diaFixoParcelas}
+                      onChangeDiaFixo={setDiaFixoParcelas}
+                      dataInicio={dataInicioParcelas}
+                      onChangeDataInicio={setDataInicioParcelas}
+                      valorParcela={formData.valor}
+                    />
                   </div>
                 )}
               </div>

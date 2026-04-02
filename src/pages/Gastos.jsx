@@ -198,7 +198,7 @@ export default function Gastos() {
       }
       
       const processedData = {
-        numero_sequencial: numeroSequencial, // Adiciona o número sequencial
+        numero_sequencial: numeroSequencial,
         obra_id: data.obra_id,
         descricao: data.descricao,
         categoria_id: data.categoria_id,
@@ -221,13 +221,42 @@ export default function Gastos() {
       };
       
       // Verifica se tem ID válido para decidir entre update ou create
-      if (editingGasto && editingGasto.id) { // Corrected condition to check for editingGasto.id
+      let savedGastoId = editingGasto?.id;
+
+      if (editingGasto && editingGasto.id) {
         await base44.entities.Gasto.update(editingGasto.id, processedData);
-        await delay(200); // Delay após operação
+        savedGastoId = editingGasto.id;
+        await delay(200);
       } else {
-        await base44.entities.Gasto.create(processedData);
-        await delay(200); // Delay após operação
+        const createdGasto = await base44.entities.Gasto.create(processedData);
+        savedGastoId = createdGasto.id;
+        await delay(200);
       }
+
+      if (data.eh_recorrente && savedGastoId) {
+        const parcelasExistentes = await base44.entities.ParcelaGasto.filter({ gasto_id: savedGastoId });
+        for (const parcela of parcelasExistentes) {
+          await base44.entities.ParcelaGasto.delete(parcela.id);
+          await delay(50);
+        }
+
+        const parcelasParaCriar = (data.parcelas_recorrencia || [])
+          .filter((item) => item.data_vencimento)
+          .map((item) => ({
+            gasto_id: savedGastoId,
+            numero_parcela: item.numero_parcela,
+            descricao: `${data.descricao} - Parcela ${item.numero_parcela}`,
+            valor: parseValor(item.valor),
+            data_vencimento: item.data_vencimento,
+            status: item.status || 'programado'
+          }));
+
+        if (parcelasParaCriar.length > 0) {
+          await base44.entities.ParcelaGasto.bulkCreate(parcelasParaCriar);
+          await delay(200);
+        }
+      }
+
       setShowForm(false);
       setEditingGasto(null);
       loadData();

@@ -15,6 +15,7 @@ import StatsCard from "../components/dashboard/StatsCard";
 import GastosRecentes from "../components/dashboard/GastosRecentes";
 import PagamentosVencimento from "../components/dashboard/PagamentosVencimento";
 import GastoForm from "../components/gastos/GastoForm";
+import ParcelasBaixaCard from "../components/dashboard/ParcelasBaixaCard";
 
 export default function Inicio() {
   const [obras, setObras] = useState([]);
@@ -28,6 +29,7 @@ export default function Inicio() {
   const [editingGasto, setEditingGasto] = useState(null);
   const [userAuthenticated, setUserAuthenticated] = useState(false);
   const [etapasObra, setEtapasObra] = useState([]);
+  const [parcelasGastos, setParcelasGastos] = useState([]);
 
   useEffect(() => {
     checkUserAndLoadData();
@@ -53,13 +55,14 @@ export default function Inicio() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [obraData, gastoData, receitaData, gastosAdminData, categoriaData, etapaData] = await Promise.all([
+      const [obraData, gastoData, receitaData, gastosAdminData, categoriaData, etapaData, parcelasData] = await Promise.all([
         base44.entities.Obra.list('-created_date'),
         base44.entities.Gasto.list('-created_date'),
         base44.entities.Receita.list('-created_date'),
         base44.entities.GastoAdministrativo.list('-created_date'),
         base44.entities.CategoriaGasto.list(),
-        base44.entities.EtapaObra.list()
+        base44.entities.EtapaObra.list(),
+        base44.entities.ParcelaGasto.list('-created_date')
       ]);
       
       setObras(obraData);
@@ -68,6 +71,7 @@ export default function Inicio() {
       setGastosAdmin(gastosAdminData);
       setCategorias(categoriaData);
       setEtapasObra(etapaData.sort((a, b) => (a.ordem || 999) - (b.ordem || 999)));
+      setParcelasGastos(parcelasData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -161,6 +165,22 @@ export default function Inicio() {
     ? gastos 
     : gastos.filter(g => g.obra_id === selectedObraId);
 
+  const gruposParcelas = gastosFiltradosParaVisualizacao
+    .filter((gasto) => gasto.eh_recorrente)
+    .map((gasto) => {
+      const parcelas = parcelasGastos
+        .filter((item) => item.gasto_id === gasto.id && item.status !== 'pago')
+        .sort((a, b) => (a.numero_parcela || 0) - (b.numero_parcela || 0));
+      const total = Number(gasto.valor_total_recorrencia || 0);
+      const entrada = Number(gasto.valor_entrada || 0);
+      const pagoParcelas = parcelasGastos
+        .filter((item) => item.gasto_id === gasto.id && item.status === 'pago')
+        .reduce((sum, item) => sum + Number(item.valor || 0), 0);
+      const restante = Math.max(total - entrada - pagoParcelas, 0);
+      return { gasto, parcelas, restante };
+    })
+    .filter((item) => item.parcelas.length > 0);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -202,6 +222,7 @@ export default function Inicio() {
       </div>
 
       <PagamentosVencimento gastos={gastosFiltradosParaVisualizacao} onEditGasto={handleEditGasto} onGastoUpdated={loadData} />
+      <ParcelasBaixaCard grupos={gruposParcelas} onUpdated={loadData} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatsCard
