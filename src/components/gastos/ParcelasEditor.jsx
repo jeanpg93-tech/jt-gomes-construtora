@@ -25,6 +25,10 @@ export default function ParcelasEditor({
   const formatCurrency = (value) =>
     Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  const totalParcelas = parcelas.reduce((sum, parcela) => sum + (Number(parcela.valor || 0) || 0), 0);
+  const saldoEsperado = Math.max(Number(valorTotal || 0) - Number(valorEntrada || 0), 0);
+  const diferencaParcelas = saldoEsperado - totalParcelas;
+
   return (
     <Card className="border-blue-200 bg-white shadow-sm">
       <CardHeader className="pb-2">
@@ -34,7 +38,7 @@ export default function ParcelasEditor({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-wide text-blue-700">Valor total</p>
             <p className="mt-1 text-xl font-bold text-slate-900">R$ {formatCurrency(valorTotal)}</p>
@@ -44,10 +48,22 @@ export default function ParcelasEditor({
             <p className="mt-1 text-xl font-bold text-slate-900">R$ {formatCurrency(valorEntrada)}</p>
           </div>
           <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Valor por parcela</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Valor previsto por parcela</p>
             <p className="mt-1 text-xl font-bold text-slate-900">R$ {formatCurrency(valorParcela)}</p>
           </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-700">Total das parcelas</p>
+            <p className="mt-1 text-xl font-bold text-slate-900">R$ {formatCurrency(totalParcelas)}</p>
+          </div>
         </div>
+
+        {Math.abs(diferencaParcelas) > 0.009 && (
+          <div className={`rounded-xl border px-4 py-3 text-sm font-medium ${diferencaParcelas > 0 ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-blue-200 bg-blue-50 text-blue-800'}`}>
+            {diferencaParcelas > 0
+              ? `Atenção: ainda faltam R$ ${formatCurrency(diferencaParcelas)} para fechar o valor total das parcelas.`
+              : `Atenção: as parcelas estão R$ ${formatCurrency(Math.abs(diferencaParcelas))} acima do valor previsto.`}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[120px,1fr,1fr,200px] gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
           <div className="space-y-2">
@@ -76,7 +92,7 @@ export default function ParcelasEditor({
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[140px,160px,1fr,1fr,1fr] gap-4 items-end">
                 <div>
                   <p className="text-base font-semibold text-slate-900">Parcela {parcela.numero_parcela}</p>
-                  <p className="mt-1 text-sm text-slate-500">R$ {formatCurrency(parcela.valor || valorParcela || 0)}</p>
+                  <p className="mt-1 text-sm text-slate-500">R$ {formatCurrency(parcela.valor || 0)}</p>
                 </div>
                 <div className="space-y-2 min-w-0">
                   <Label>Valor</Label>
