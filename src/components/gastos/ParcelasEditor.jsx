@@ -58,10 +58,13 @@ export default function ParcelasEditor({
         </div>
 
         {Math.abs(diferencaParcelas) > 0.009 && (
-          <div className={`rounded-xl border px-4 py-3 text-sm font-medium ${diferencaParcelas > 0 ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-blue-200 bg-blue-50 text-blue-800'}`}>
-            {diferencaParcelas > 0
-              ? `Atenção: ainda faltam R$ ${formatCurrency(diferencaParcelas)} para fechar o valor total das parcelas.`
-              : `Atenção: as parcelas estão R$ ${formatCurrency(Math.abs(diferencaParcelas))} acima do valor previsto.`}
+          <div className={`rounded-2xl border-2 px-5 py-4 shadow-md ${diferencaParcelas > 0 ? 'border-orange-400 bg-gradient-to-r from-orange-100 to-amber-100 text-orange-900' : 'border-sky-400 bg-gradient-to-r from-sky-100 to-blue-100 text-blue-900'}`}>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80">Alerta de conferência</p>
+            <p className="mt-2 text-base font-extrabold leading-relaxed">
+              {diferencaParcelas > 0
+                ? `Ainda faltam R$ ${formatCurrency(diferencaParcelas)} para fechar o valor total das parcelas.`
+                : `As parcelas estão R$ ${formatCurrency(Math.abs(diferencaParcelas))} acima do valor previsto.`}
+            </p>
           </div>
         )}
 
