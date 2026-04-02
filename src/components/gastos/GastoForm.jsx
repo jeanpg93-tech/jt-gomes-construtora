@@ -188,6 +188,8 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
     const [year, month, day] = baseDate.split('-').map(Number);
     const diaReferencia = Number(diaFixoParcelas || day);
 
+    const valorParcelaCalculado = Number(String(formData.valor || 0).replace(',', '.')) || 0;
+
     const novasParcelas = Array.from({ length: quantidade }, (_, index) => {
       const current = new Date(year, month - 1 + index, 1);
       const ultimoDia = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
@@ -197,8 +199,9 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
 
       return {
         numero_parcela: index + 1,
-        valor: Number(formData.valor || 0),
+        valor: valorParcelaCalculado,
         data_vencimento: dataVencimento,
+        data_pagamento: '',
         status: 'programado'
       };
     });
@@ -489,6 +492,8 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                       dataInicio={dataInicioParcelas}
                       onChangeDataInicio={setDataInicioParcelas}
                       valorParcela={formData.valor}
+                      valorTotal={formData.valor_total_recorrencia}
+                      valorEntrada={formData.valor_entrada}
                     />
                   </div>
                 )}

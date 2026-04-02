@@ -248,6 +248,7 @@ export default function Gastos() {
             descricao: `${data.descricao} - Parcela ${item.numero_parcela}`,
             valor: parseValor(item.valor),
             data_vencimento: item.data_vencimento,
+            data_pagamento: item.status === 'pago' ? (item.data_pagamento || item.data_vencimento || null) : null,
             status: item.status || 'programado'
           }));
 
