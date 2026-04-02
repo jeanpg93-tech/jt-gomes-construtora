@@ -127,7 +127,16 @@ export default function Relatorios() {
       filtered = filtered.filter((item) => selectedSubcategoriaIds.includes(item.subcategoria_id));
     }
     if (selectedSubcategoria2Ids.length > 0) {
-      filtered = filtered.filter((item) => selectedSubcategoria2Ids.includes(item.subcategoria_2_id));
+      filtered = filtered.filter((item) => {
+        const candidates = [
+          item.subcategoria_2_id,
+          item.subcategoria2_id,
+          item.subcategoria_gasto2_id,
+          item.subcategoria_gasto2,
+          item.subcategoria_2,
+        ];
+        return candidates.some((v) => v && selectedSubcategoria2Ids.includes(v));
+      });
     }
     if (selectedEtapaIds.length > 0) {
       filtered = filtered.filter((item) => selectedEtapaIds.some((id) => (item.etapa_obra_ids || []).includes(id)));
@@ -148,19 +157,22 @@ export default function Relatorios() {
   const selectedObra = selectedObras[0];
 
   const categoriaAnalytics = buildCategoriaAnalytics({
-    gastos: gastosFiltrados,
+    gastos: gastosFiltrados.filter((g) =>
+      (selectedSubcategoriaIds.length === 0 || selectedSubcategoriaIds.includes(g.subcategoria_id)) &&
+      (selectedSubcategoria2Ids.length === 0 || [g.subcategoria_2_id, g.subcategoria2_id, g.subcategoria_gasto2_id, g.subcategoria_gasto2, g.subcategoria_2].some(v => v && selectedSubcategoria2Ids.includes(v))) &&
+      (selectedEtapaIds.length === 0 || (g.etapa_obra_ids || []).some(id => selectedEtapaIds.includes(id)))
+    ),
     categorias: categoriasGasto.filter((categoria) => selectedCategoriaIds.length === 0 || selectedCategoriaIds.includes(categoria.id)),
     subcategorias: subcategoriasGasto,
   });
 
+  const totalGrafico = categoriaAnalytics.reduce((sum, item) => sum + item.total, 0);
   const graficoData = categoriaAnalytics.map((categoria) => ({
     name: categoria.nome,
     value: categoria.total,
     pago: categoria.pago,
     pendente: categoria.pendente,
-    percentual: categoriaAnalytics.reduce((sum, item) => sum + item.total, 0) > 0
-      ? (categoria.total / categoriaAnalytics.reduce((sum, item) => sum + item.total, 0)) * 100
-      : 0,
+    percentual: totalGrafico > 0 ? (categoria.total / totalGrafico) * 100 : 0,
   }));
 
   const resumoFinanceiro = buildResumoObra({

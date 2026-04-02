@@ -52,6 +52,7 @@ export function buildCategoriaAnalytics({ gastos, categorias, subcategorias }) {
 
       const total = pagos + pendentes;
       const categoriaSubcategorias = subcategorias
+        .filter((subcategoria) => subcategoria.categoria_id === categoria.id)
         .map((subcategoria) => {
           const gastosSub = gastosCategoria.filter((gasto) => gasto.subcategoria_id === subcategoria.id);
           if (!gastosSub.length) return null;
