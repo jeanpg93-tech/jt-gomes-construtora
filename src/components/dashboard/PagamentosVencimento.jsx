@@ -99,6 +99,13 @@ export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdat
       proximo: 'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100'
     };
 
+    const valorTotalRecorrencia = Number(gasto.valor_total_recorrencia || 0);
+    const valorEntrada = Number(gasto.valor_entrada || 0);
+    const valorPagoAteAgora = valorEntrada + (gasto.status_pagamento === 'pago' ? Number(gasto.valor || 0) : 0);
+    const valorRestante = gasto.eh_recorrente && valorTotalRecorrencia > 0
+      ? Math.max(valorTotalRecorrencia - valorPagoAteAgora, 0)
+      : null;
+
     return (
       <div 
         key={gasto.id} 
@@ -107,9 +114,14 @@ export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdat
         <div className="flex-1 cursor-pointer" onClick={() => onEditGasto && onEditGasto(gasto)}>
           <h4 className="font-medium">{gasto.descricao}</h4>
           <p className="text-sm opacity-75">
-            R$ {gasto.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            Parcela: R$ {gasto.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             {gasto.fornecedor && ` • ${gasto.fornecedor}`}
           </p>
+          {valorRestante !== null && (
+            <p className="text-sm font-semibold mt-1">
+              Falta pagar: R$ {valorRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          )}
           <div className="flex items-center gap-1 mt-1 text-sm">
             <Calendar className="w-3 h-3" />
             {format(new Date(gasto.data_vencimento), 'dd/MM/yyyy', { locale: ptBR })}

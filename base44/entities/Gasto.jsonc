@@ -1,0 +1,142 @@
+{
+  "name": "Gasto",
+  "type": "object",
+  "properties": {
+    "numero_sequencial": {
+      "type": "string",
+      "description": "N\u00famero sequencial \u00fanico do gasto para rastreabilidade (ex: #0001)"
+    },
+    "obra_id": {
+      "type": "string",
+      "description": "ID da obra relacionada"
+    },
+    "descricao": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o do gasto"
+    },
+    "categoria_id": {
+      "type": "string",
+      "description": "ID da categoria de gasto"
+    },
+    "subcategoria_id": {
+      "type": "string",
+      "description": "ID da subcategoria de gasto (tipo de material/servi\u00e7o)"
+    },
+    "etapa_obra_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs das etapas da obra onde este gasto foi aplicado"
+    },
+    "valor": {
+      "type": "number",
+      "description": "Valor do gasto"
+    },
+    "data": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de registro do gasto"
+    },
+    "data_vencimento": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de vencimento (para gastos programados)"
+    },
+    "data_pagamento": {
+      "type": "string",
+      "format": "date",
+      "description": "Data em que o gasto foi efetivamente pago (usada para contabiliza\u00e7\u00e3o em relat\u00f3rios)"
+    },
+    "fornecedor_id": {
+      "type": "string",
+      "description": "ID do fornecedor"
+    },
+    "forma_pagamento": {
+      "type": "string",
+      "enum": [
+        "dinheiro",
+        "cartao",
+        "transferencia",
+        "boleto",
+        "financiamento",
+        "pix"
+      ],
+      "description": "Forma de pagamento"
+    },
+    "status_pagamento": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "programado",
+        "pago",
+        "atrasado"
+      ],
+      "default": "pendente",
+      "description": "Status do pagamento"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre o gasto"
+    },
+    "origem_registro": {
+      "type": "string",
+      "enum": [
+        "web",
+        "whatsapp"
+      ],
+      "default": "web",
+      "description": "Canal por onde o registro foi criado"
+    },
+    "eh_recorrente": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indica se este gasto faz parte de um pagamento recorrente/parcelado"
+    },
+    "valor_total_recorrencia": {
+      "type": "number",
+      "description": "Valor total da compra/contrato recorrente"
+    },
+    "valor_entrada": {
+      "type": "number",
+      "description": "Valor da entrada j\u00e1 paga, se houver"
+    },
+    "quantidade_parcelas": {
+      "type": "number",
+      "description": "Quantidade total de parcelas"
+    }
+  },
+  "required": [
+    "obra_id",
+    "descricao",
+    "categoria_id",
+    "valor",
+    "data"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

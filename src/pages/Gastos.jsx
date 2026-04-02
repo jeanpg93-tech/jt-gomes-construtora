@@ -208,12 +208,16 @@ export default function Gastos() {
         data: data.data,
         data_vencimento: data.data_vencimento || null,
         data_pagamento: data.data_pagamento || null,
-        fornecedor_id: data.fornecedor_id || null, // Changed from 'fornecedor' to 'fornecedor_id'
+        fornecedor_id: data.fornecedor_id || null,
         forma_pagamento: data.forma_pagamento || null,
         status_pagamento: data.status_pagamento,
         observacoes: data.observacoes || null,
         arquivo_anexo: data.arquivo_anexo || null,
-        origem_registro: 'web'
+        origem_registro: 'web',
+        eh_recorrente: !!data.eh_recorrente,
+        valor_total_recorrencia: data.eh_recorrente && data.valor_total_recorrencia !== null && data.valor_total_recorrencia !== '' ? parseValor(data.valor_total_recorrencia) : null,
+        valor_entrada: data.eh_recorrente && data.valor_entrada !== null && data.valor_entrada !== '' ? parseValor(data.valor_entrada) : null,
+        quantidade_parcelas: data.eh_recorrente && data.quantidade_parcelas ? Number(data.quantidade_parcelas) : null
       };
       
       // Verifica se tem ID válido para decidir entre update ou create

@@ -56,7 +56,11 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
     forma_pagamento: gasto?.forma_pagamento || '',
     status_pagamento: gasto?.status_pagamento || 'pendente',
     observacoes: gasto?.observacoes || '',
-    origem_registro: 'web'
+    origem_registro: 'web',
+    eh_recorrente: gasto?.eh_recorrente || false,
+    valor_total_recorrencia: gasto?.valor_total_recorrencia || '',
+    valor_entrada: gasto?.valor_entrada || '',
+    quantidade_parcelas: gasto?.quantidade_parcelas || ''
   });
 
   const [categorias, setCategorias] = useState(categoriasInicial);
@@ -144,6 +148,10 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
       data_vencimento: formData.data_vencimento || null,
       data_pagamento: formData.data_pagamento || null,
       observacoes: formData.observacoes || null,
+      eh_recorrente: !!formData.eh_recorrente,
+      valor_total_recorrencia: formData.eh_recorrente && formData.valor_total_recorrencia ? Number(formData.valor_total_recorrencia) : null,
+      valor_entrada: formData.eh_recorrente && formData.valor_entrada !== '' ? Number(formData.valor_entrada) : null,
+      quantidade_parcelas: formData.eh_recorrente && formData.quantidade_parcelas ? Number(formData.quantidade_parcelas) : null,
       // arquivo_anexo removed
       subcategoria_id: formData.subcategoria_id || null,
       etapa_obra_ids: formData.etapa_obra_ids.length > 0 ? formData.etapa_obra_ids : null,
@@ -367,23 +375,74 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="valor">Valor *</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">R$</span>
-                  <Input
-                    id="valor"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.valor}
-                    onChange={(e) => handleChange('valor', e.target.value)}
-                    placeholder="0.00"
-                    className="pl-10"
-                    required
-                  />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="valor">Valor da parcela *</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">R$</span>
+                    <Input
+                      id="valor"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.valor}
+                      onChange={(e) => handleChange('valor', e.target.value)}
+                      placeholder="0.00"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500">Use ponto (.) como separador decimal. Ex: 525.41</p>
                 </div>
-                <p className="text-xs text-slate-500">Use ponto (.) como separador decimal. Ex: 525.41</p>
+
+                <div className="flex items-center space-x-2 rounded-lg border border-slate-200 p-3 bg-slate-50">
+                  <Checkbox
+                    id="eh_recorrente"
+                    checked={!!formData.eh_recorrente}
+                    onCheckedChange={(checked) => handleChange('eh_recorrente', !!checked)}
+                  />
+                  <Label htmlFor="eh_recorrente" className="cursor-pointer">Este gasto é recorrente / parcelado</Label>
+                </div>
+
+                {formData.eh_recorrente && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="valor_total_recorrencia">Valor total</Label>
+                      <Input
+                        id="valor_total_recorrencia"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.valor_total_recorrencia}
+                        onChange={(e) => handleChange('valor_total_recorrencia', e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="valor_entrada">Entrada</Label>
+                      <Input
+                        id="valor_entrada"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.valor_entrada}
+                        onChange={(e) => handleChange('valor_entrada', e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="quantidade_parcelas">Parcelas</Label>
+                      <Input
+                        id="quantidade_parcelas"
+                        type="number"
+                        min="1"
+                        value={formData.quantidade_parcelas}
+                        onChange={(e) => handleChange('quantidade_parcelas', e.target.value)}
+                        placeholder="Ex: 10"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
