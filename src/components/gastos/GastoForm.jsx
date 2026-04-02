@@ -166,6 +166,18 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
     onSave(processedData);
   };
 
+  const parseMoney = (value) => {
+    if (value === null || value === undefined || value === '') return 0;
+    return Number(String(value).replace(',', '.')) || 0;
+  };
+
+  const valorTotalRecorrenciaNumero = parseMoney(formData.valor_total_recorrencia);
+  const valorEntradaNumero = parseMoney(formData.valor_entrada);
+  const quantidadeParcelasNumero = Number(formData.quantidade_parcelas || 0);
+  const valorParcelaCalculado = quantidadeParcelasNumero > 0
+    ? Math.max(valorTotalRecorrenciaNumero - valorEntradaNumero, 0) / quantidadeParcelasNumero
+    : 0;
+
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -188,7 +200,9 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
     const [year, month, day] = baseDate.split('-').map(Number);
     const diaReferencia = Number(diaFixoParcelas || day);
 
-    const valorParcelaCalculado = Number(String(formData.valor || 0).replace(',', '.')) || 0;
+    const valorParcelaCalculado = quantidade > 0
+      ? Math.max(parseMoney(formData.valor_total_recorrencia) - parseMoney(formData.valor_entrada), 0) / quantidade
+      : 0;
 
     const novasParcelas = Array.from({ length: quantidade }, (_, index) => {
       const current = new Date(year, month - 1 + index, 1);
@@ -491,7 +505,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                       onChangeDiaFixo={setDiaFixoParcelas}
                       dataInicio={dataInicioParcelas}
                       onChangeDataInicio={setDataInicioParcelas}
-                      valorParcela={formData.valor}
+                      valorParcela={valorParcelaCalculado}
                       valorTotal={formData.valor_total_recorrencia}
                       valorEntrada={formData.valor_entrada}
                     />

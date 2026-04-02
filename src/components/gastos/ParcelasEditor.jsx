@@ -26,20 +26,30 @@ export default function ParcelasEditor({
     Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
-    <Card className="border-blue-200 bg-white">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <CalendarDays className="w-4 h-4 text-blue-600" />
+    <Card className="border-blue-200 bg-white shadow-sm">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg flex items-center gap-2 text-slate-900">
+          <CalendarDays className="w-5 h-5 text-blue-600" />
           Agenda das parcelas
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div className="md:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-lg bg-blue-50 p-3 border border-blue-100">
-            <div className="text-sm"><span className="text-slate-500">Valor total:</span> <span className="font-semibold">R$ {formatCurrency(valorTotal)}</span></div>
-            <div className="text-sm"><span className="text-slate-500">Entrada:</span> <span className="font-semibold">R$ {formatCurrency(valorEntrada)}</span></div>
-            <div className="text-sm"><span className="text-slate-500">Parcela:</span> <span className="font-semibold">R$ {formatCurrency(valorParcela)}</span></div>
+      <CardContent className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-blue-700">Valor total</p>
+            <p className="mt-1 text-xl font-bold text-slate-900">R$ {formatCurrency(valorTotal)}</p>
           </div>
+          <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-blue-700">Entrada</p>
+            <p className="mt-1 text-xl font-bold text-slate-900">R$ {formatCurrency(valorEntrada)}</p>
+          </div>
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Valor por parcela</p>
+            <p className="mt-1 text-xl font-bold text-slate-900">R$ {formatCurrency(valorParcela)}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-[1fr,1fr,1fr,220px] gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
           <div className="space-y-2">
             <Label>Qtd. parcelas</Label>
             <Input type="number" min="1" value={quantidadeParcelas} onChange={(e) => onChangeQuantidade(e.target.value)} />
@@ -53,7 +63,7 @@ export default function ParcelasEditor({
             <Input type="number" min="1" max="31" value={diaFixo} onChange={(e) => onChangeDiaFixo(e.target.value)} placeholder="Ex: 15" />
           </div>
           <div className="flex items-end">
-            <Button type="button" variant="outline" className="w-full" onClick={onGenerate}>
+            <Button type="button" variant="outline" className="w-full h-10 bg-white" onClick={onGenerate}>
               <Wand2 className="w-4 h-4 mr-2" />
               Gerar datas
             </Button>
@@ -62,40 +72,42 @@ export default function ParcelasEditor({
 
         <div className="space-y-3">
           {parcelas.map((parcela) => (
-            <div key={parcela.numero_parcela} className="grid grid-cols-1 md:grid-cols-4 gap-3 rounded-lg border border-slate-200 p-3">
-              <div>
-                <p className="text-sm font-medium text-slate-800">Parcela {parcela.numero_parcela}</p>
-                <p className="text-xs text-slate-500">R$ {formatCurrency(parcela.valor || valorParcela || 0)}</p>
-              </div>
-              <div className="space-y-1">
-                <Label>Vencimento</Label>
-                <Input
-                  type="date"
-                  value={parcela.data_vencimento || ''}
-                  onChange={(e) => onUpdateParcela(parcela.numero_parcela, 'data_vencimento', e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Status</Label>
-                <Select value={parcela.status || 'programado'} onValueChange={(value) => onUpdateParcela(parcela.numero_parcela, 'status', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="programado">programado</SelectItem>
-                    <SelectItem value="pendente">pendente</SelectItem>
-                    <SelectItem value="pago">pago</SelectItem>
-                    <SelectItem value="atrasado">atrasado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>Data pag.</Label>
-                <Input
-                  type="date"
-                  value={parcela.data_pagamento || ''}
-                  onChange={(e) => onUpdateParcela(parcela.numero_parcela, 'data_pagamento', e.target.value)}
-                />
+            <div key={parcela.numero_parcela} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="grid grid-cols-1 lg:grid-cols-[180px,1fr,1fr,1fr] gap-4 items-end">
+                <div>
+                  <p className="text-base font-semibold text-slate-900">Parcela {parcela.numero_parcela}</p>
+                  <p className="mt-1 text-sm text-slate-500">R$ {formatCurrency(parcela.valor || valorParcela || 0)}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Vencimento</Label>
+                  <Input
+                    type="date"
+                    value={parcela.data_vencimento || ''}
+                    onChange={(e) => onUpdateParcela(parcela.numero_parcela, 'data_vencimento', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={parcela.status || 'programado'} onValueChange={(value) => onUpdateParcela(parcela.numero_parcela, 'status', value)}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="programado">Programado</SelectItem>
+                      <SelectItem value="pendente">Pendente</SelectItem>
+                      <SelectItem value="pago">Pago</SelectItem>
+                      <SelectItem value="atrasado">Atrasado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Data de pagamento</Label>
+                  <Input
+                    type="date"
+                    value={parcela.data_pagamento || ''}
+                    onChange={(e) => onUpdateParcela(parcela.numero_parcela, 'data_pagamento', e.target.value)}
+                  />
+                </div>
               </div>
             </div>
           ))}
