@@ -283,6 +283,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
     ? subcategorias.filter(sub => sub.categoria_id === formData.categoria_id)
     : [];
     
+  const mostrarStatusPrincipal = !formData.eh_recorrente;
   const isStatusProgramado = formData.status_pagamento === 'programado';
   const isStatusPago = formData.status_pagamento === 'pago';
 
@@ -554,44 +555,48 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="status_pagamento">Status do Pagamento</Label>
-                <Select value={formData.status_pagamento} onValueChange={(value) => handleChange('status_pagamento', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pago">Pago</SelectItem>
-                    <SelectItem value="programado">Programado</SelectItem>
-                    <SelectItem value="pendente">Pendente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {mostrarStatusPrincipal && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="status_pagamento">Status do Pagamento</Label>
+                    <Select value={formData.status_pagamento} onValueChange={(value) => handleChange('status_pagamento', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pago">Pago</SelectItem>
+                        <SelectItem value="programado">Programado</SelectItem>
+                        <SelectItem value="pendente">Pendente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {isStatusProgramado && (
-                <div className="space-y-2">
-                  <Label htmlFor="data_vencimento">Data de Vencimento *</Label>
-                  <Input
-                    id="data_vencimento"
-                    type="date"
-                    value={formData.data_vencimento}
-                    onChange={(e) => handleChange('data_vencimento', e.target.value)}
-                    required={isStatusProgramado}
-                  />
-                </div>
-              )}
+                  {isStatusProgramado && (
+                    <div className="space-y-2">
+                      <Label htmlFor="data_vencimento">Data de Vencimento *</Label>
+                      <Input
+                        id="data_vencimento"
+                        type="date"
+                        value={formData.data_vencimento}
+                        onChange={(e) => handleChange('data_vencimento', e.target.value)}
+                        required={isStatusProgramado}
+                      />
+                    </div>
+                  )}
 
-              {isStatusPago && (
-                <div className="space-y-2 bg-green-50 p-4 rounded-lg border border-green-200">
-                  <Label htmlFor="data_pagamento">Data de Pagamento *</Label>
-                  <Input
-                    id="data_pagamento"
-                    type="date"
-                    value={formData.data_pagamento}
-                    onChange={(e) => handleChange('data_pagamento', e.target.value)}
-                    required={isStatusPago}
-                  />
-                </div>
+                  {isStatusPago && (
+                    <div className="space-y-2 bg-green-50 p-4 rounded-lg border border-green-200">
+                      <Label htmlFor="data_pagamento">Data de Pagamento *</Label>
+                      <Input
+                        id="data_pagamento"
+                        type="date"
+                        value={formData.data_pagamento}
+                        onChange={(e) => handleChange('data_pagamento', e.target.value)}
+                        required={isStatusPago}
+                      />
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
