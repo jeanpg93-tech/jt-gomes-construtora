@@ -1,71 +1,45 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatCurrency } from "@/utils/relatorios";
 
-export default function DetalheGastosCategoria({ gastos, categoria }) {
-  if (!categoria || !categoria.id) {
-    return null;
-  }
-
-  const gastosCategoria = gastos
-    .filter(g => g.categoria_id === categoria.id)
-    .sort((a, b) => {
-      const dataA = new Date(a.data_pagamento || a.data);
-      const dataB = new Date(b.data_pagamento || b.data);
-      return dataB.getTime() - dataA.getTime();
-    });
-
-  const total = gastosCategoria.reduce((sum, g) => sum + (g.valor || 0), 0);
-
-  const formatCurrency = (value) => {
-    if (value === null || value === undefined) return 'R$ 0,00';
-    return `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return '-';
-    }
-    return format(date, 'dd/MM/yyyy', { locale: ptBR });
-  };
+export default function DetalheGastosCategoria({ categorias = [] }) {
+  if (!categorias.length) return null;
 
   return (
     <Card className="shadow-lg border-0 h-full">
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            {categoria.nome}
-          </CardTitle>
-          <Badge className="bg-blue-100 text-blue-800">
-            {formatCurrency(total)}
-          </Badge>
-        </div>
+        <CardTitle className="text-xl font-bold text-slate-800">Detalhamento por Categoria</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {gastosCategoria.length > 0 ? (
-            gastosCategoria.map((gasto) => (
-              <div key={gasto.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-                <div className="flex-1">
-                  <p className="font-medium text-slate-800">{gasto.descricao}</p>
-                  <p className="text-sm text-slate-500">
-                    {formatDate(gasto.data_pagamento || gasto.data)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-slate-900">{formatCurrency(gasto.valor)}</p>
-                </div>
+      <CardContent className="space-y-4">
+        {categorias.map((categoria) => (
+          <div key={categoria.id} className="rounded-xl border border-slate-200 p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="font-semibold text-slate-800">{categoria.nome}</h3>
+                <p className="text-sm text-slate-500">{categoria.quantidade} lançamentos</p>
               </div>
-            ))
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-slate-500">
-              Nenhum gasto nesta categoria
+              <div className="flex flex-wrap gap-2">
+                <Badge className="bg-red-100 text-red-700">Pago: {formatCurrency(categoria.pago)}</Badge>
+                <Badge className="bg-amber-100 text-amber-700">Pendente: {formatCurrency(categoria.pendente)}</Badge>
+                <Badge className="bg-blue-100 text-blue-700">Total: {formatCurrency(categoria.total)}</Badge>
+              </div>
             </div>
-          )}
-        </div>
+            {categoria.subcategorias.length > 0 && (
+              <div className="space-y-2">
+                {categoria.subcategorias.map((subcategoria) => (
+                  <div key={subcategoria.id} className="flex flex-col gap-1 rounded-lg bg-slate-50 px-3 py-2 text-sm md:flex-row md:items-center md:justify-between">
+                    <span className="font-medium text-slate-700">{subcategoria.nome}</span>
+                    <div className="flex flex-wrap gap-3 text-slate-600">
+                      <span>Pago: {formatCurrency(subcategoria.pago)}</span>
+                      <span>Pendente: {formatCurrency(subcategoria.pendente)}</span>
+                      <span>Total: {formatCurrency(subcategoria.total)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </CardContent>
     </Card>
   );
