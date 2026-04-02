@@ -146,7 +146,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
     const processedData = {
       ...formData,
       numero_sequencial: formData.numero_sequencial,
-      valor: formData.valor, 
+      valor: formData.eh_recorrente ? formData.valor_total_recorrencia : formData.valor,
       data: finalDataField, // Adjusted for 'contabilização' based on payment status
       fornecedor_id: formData.fornecedor_id || null,
       forma_pagamento: formData.forma_pagamento || null,
@@ -430,24 +430,26 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
               </div>
 
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="valor">Valor da parcela *</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">R$</span>
-                    <Input
-                      id="valor"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.valor}
-                      onChange={(e) => handleChange('valor', e.target.value)}
-                      placeholder="0.00"
-                      className="pl-10"
-                      required
-                    />
+                {!formData.eh_recorrente && (
+                  <div className="space-y-2">
+                    <Label htmlFor="valor">Valor *</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">R$</span>
+                      <Input
+                        id="valor"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.valor}
+                        onChange={(e) => handleChange('valor', e.target.value)}
+                        placeholder="0.00"
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500">Use ponto (.) como separador decimal. Ex: 525.41</p>
                   </div>
-                  <p className="text-xs text-slate-500">Use ponto (.) como separador decimal. Ex: 525.41</p>
-                </div>
+                )}
 
                 <div className="flex items-center space-x-2 rounded-lg border border-slate-200 p-3 bg-slate-50">
                   <Checkbox
@@ -469,7 +471,10 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                           step="0.01"
                           min="0"
                           value={formData.valor_total_recorrencia}
-                          onChange={(e) => handleChange('valor_total_recorrencia', e.target.value)}
+                          onChange={(e) => {
+                            handleChange('valor_total_recorrencia', e.target.value);
+                            handleChange('valor', e.target.value);
+                          }}
                           placeholder="0.00"
                         />
                       </div>
