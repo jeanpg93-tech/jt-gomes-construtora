@@ -137,24 +137,55 @@ export function buildCategoriaAnalytics({ gastos, categorias, subcategorias, par
     .sort((a, b) => b.total - a.total);
 }
 
-export function buildResumoObra({ obra, gastos, receitas }) {
-  const gastosPagos = gastos
-    .filter((gasto) => gasto.status_pagamento === 'pago')
-    .reduce((sum, gasto) => sum + Number(gasto.valor || 0), 0);
+export function buildResumoObra({ obra, gastos, receitas, parcelas = [] }) {
+  let gastosPagos = 0;
+  let gastosAPagar = 0;
 
-  const gastosAPagar = gastos
-    .filter((gasto) => ['pendente', 'programado', 'atrasado'].includes(gasto.status_pagamento))
-    .reduce((sum, gasto) => sum + Number(gasto.valor || 0), 0);
+  for (const gasto of gastos) {
+    if (parcelas.length > 0) {
+      const p = parcelas.filter((parc) => parc.gasto_id === gasto.id);
+      if (p.length > 0) {
+        const pagosParcelas = p.filter((x) => x.status === 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
+        const totalParcelas = p.reduce((s, x) => s + Number(x.valor || 0), 0);
+        let pendentesParcelas = p.filter((x) => x.status !== 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
+        if (totalParcelas === 0 && Number(gasto.valor_total_recorrencia || 0) > 0) {
+          pendentesParcelas = Math.max(0, Number(gasto.valor_total_recorrencia || 0) - Number(gasto.valor_entrada || 0) - pagosParcelas);
+        }
+        gastosPagos += pagosParcelas + Number(gasto.valor_entrada || 0);
+        gastosAPagar += pendentesParcelas;
+        continue;
+      }
+    }
+    if (gasto.status_pagamento === 'pago') gastosPagos += Number(gasto.valor || 0);
+    else if (['pendente', 'programado', 'atrasado'].includes(gasto.status_pagamento)) gastosAPagar += Number(gasto.valor || 0);
+    gastosPagos += Number(gasto.valor_entrada || 0);
+  }
 
   const terreno = gastos.filter((gasto) => gasto.categoria_id === 'terreno');
 
-  const totalTerrenoPago = terreno
-    .filter((gasto) => gasto.status_pagamento === 'pago')
-    .reduce((sum, gasto) => sum + Number(gasto.valor || 0), 0);
+  const calcSubset = (subset) => {
+    let pago = 0; let pend = 0;
+    for (const g of subset) {
+      const p = parcelas.filter((parc) => parc.gasto_id === g.id);
+      if (p.length > 0) {
+        const pagosParcelas = p.filter((x) => x.status === 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
+        const totalParcelas = p.reduce((s, x) => s + Number(x.valor || 0), 0);
+        let pendentesParcelas = p.filter((x) => x.status !== 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
+        if (totalParcelas === 0 && Number(g.valor_total_recorrencia || 0) > 0) {
+          pendentesParcelas = Math.max(0, Number(g.valor_total_recorrencia || 0) - Number(g.valor_entrada || 0) - pagosParcelas);
+        }
+        pago += pagosParcelas + Number(g.valor_entrada || 0);
+        pend += pendentesParcelas;
+      } else {
+        if (g.status_pagamento === 'pago') pago += Number(g.valor || 0);
+        else if (['pendente', 'programado', 'atrasado'].includes(g.status_pagamento)) pend += Number(g.valor || 0);
+        pago += Number(g.valor_entrada || 0);
+      }
+    }
+    return { pago, pend };
+  };
 
-  const totalTerrenoPendente = terreno
-    .filter((gasto) => ['pendente', 'programado', 'atrasado'].includes(gasto.status_pagamento))
-    .reduce((sum, gasto) => sum + Number(gasto.valor || 0), 0);
+  const { pago: totalTerrenoPago, pend: totalTerrenoPendente } = calcSubset(terreno);
 
   const totalReceitas = receitas.reduce((sum, receita) => sum + Number(receita.valor || 0), 0);
   const totalDespesas = gastosPagos + gastosAPagar;

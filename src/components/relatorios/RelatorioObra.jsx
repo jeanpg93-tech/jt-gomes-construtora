@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,24 +5,40 @@ import { Building2, MapPin, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export default function RelatorioObra({ obra, obras, gastos, receitas, contratos, workspaceInfo }) {
+export default function RelatorioObra({ obra, obras, gastos, receitas, contratos, workspaceInfo, parcelas = [] }) {
   const formatCurrency = (value) => {
     if (typeof value !== 'number') return 'R$ 0,00';
     return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  // Se múltiplas obras, mostrar resumo geral
-  if (obras && obras.length > 1) {
-    const gastosPagos = gastos
-      .filter(g => g.status_pagamento === 'pago')
-      .reduce((sum, g) => sum + (g.valor || 0), 0);
+    const calcTotals = (listaGastos) => {
+      let pagos = 0;
+      let pend = 0;
+      for (const g of listaGastos) {
+        const p = (parcelas || []).filter((x) => x.gasto_id === g.id);
+        if (p.length > 0) {
+          const pagosParcelas = p.filter((x) => x.status === 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
+          const totalParcelas = p.reduce((s, x) => s + Number(x.valor || 0), 0);
+          let pendParcelas = p.filter((x) => x.status !== 'pago').reduce((s, x) => s + Number(x.valor || 0), 0);
+          if (totalParcelas === 0 && Number(g.valor_total_recorrencia || 0) > 0) {
+            pendParcelas = Math.max(0, Number(g.valor_total_recorrencia || 0) - Number(g.valor_entrada || 0) - pagosParcelas);
+          }
+          pagos += pagosParcelas + Number(g.valor_entrada || 0);
+          pend += pendParcelas;
+        } else {
+          if (g.status_pagamento === 'pago') pagos += Number(g.valor || 0);
+          else if (['pendente','programado','atrasado'].includes(g.status_pagamento)) pend += Number(g.valor || 0);
+          pagos += Number(g.valor_entrada || 0);
+        }
+      }
+      return { pagos, pend };
+    };
 
-    const gastosAPagar = gastos
-      .filter(g => ['programado', 'atrasado', 'pendente'].includes(g.status_pagamento))
-      .reduce((sum, g) => sum + (g.valor || 0), 0);
-    
-    const totalGastosComprometidos = gastosPagos + gastosAPagar;
-    const totalReceitas = receitas.reduce((sum, r) => sum + (r.valor || 0), 0);
+    // Se múltiplas obras, mostrar resumo geral
+  if (obras && obras.length > 1) {
+    const { pagos: gastosPagos, pend: gastosAPagar } = calcTotals(gastos);
+      const totalGastosComprometidos = gastosPagos + gastosAPagar;
+      const totalReceitas = receitas.reduce((sum, r) => sum + (r.valor || 0), 0);
     
     return (
       <Card className="shadow-lg border-0">
@@ -75,14 +90,7 @@ export default function RelatorioObra({ obra, obras, gastos, receitas, contratos
   // Se obra única, mostrar detalhes completos
   if (!obra) return null;
 
-  const gastosPagos = gastos
-    .filter(g => g.status_pagamento === 'pago')
-    .reduce((sum, g) => sum + (g.valor || 0), 0);
-
-  const gastosAPagar = gastos
-    .filter(g => ['programado', 'atrasado', 'pendente'].includes(g.status_pagamento))
-    .reduce((sum, g) => sum + (g.valor || 0), 0);
-  
+  const { pagos: gastosPagos, pend: gastosAPagar } = calcTotals(gastos);
   const totalGastosComprometidos = gastosPagos + gastosAPagar;
   const totalReceitas = receitas.reduce((sum, r) => sum + (r.valor || 0), 0);
   
