@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertTriangle, Calendar, Clock, CheckCircle, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, Calendar, Clock, CheckCircle, ChevronDown, ChevronUp, CheckCircle2, Repeat } from "lucide-react";
 import { format, differenceInDays, isBefore, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { base44 } from "@/api/base44Client";
 
-export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdated }) {
+export default function PagamentosVencimento({ gastos, parcelas = [], onEditGasto, onGastoUpdated }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [markingAsPaid, setMarkingAsPaid] = useState({});
   const [paymentDates, setPaymentDates] = useState({});
@@ -31,18 +31,25 @@ export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdat
     return `${year}-${month}-${day}`;
   };
 
-  const handleMarkAsPaid = async (gasto, e) => {
+  const handleMarkAsPaid = async (item, e) => {
     e.stopPropagation();
-    const gastoId = gasto.id;
-    const dataPagamento = paymentDates[gastoId] || getTodayDate();
+    const itemId = `${item.tipo}-${item.id}`;
+    const dataPagamento = paymentDates[itemId] || getTodayDate();
     
-    setMarkingAsPaid(prev => ({ ...prev, [gastoId]: true }));
+    setMarkingAsPaid(prev => ({ ...prev, [itemId]: true }));
     
     try {
-      await base44.entities.Gasto.update(gastoId, {
-        status_pagamento: 'pago',
-        data_pagamento: addOneDay(dataPagamento)
-      });
+      if (item.tipo === 'parcela') {
+        await base44.entities.ParcelaGasto.update(item.id, {
+          status: 'pago',
+          data_pagamento: dataPagamento
+        });
+      } else {
+        await base44.entities.Gasto.update(item.id, {
+          status_pagamento: 'pago',
+          data_pagamento: addOneDay(dataPagamento)
+        });
+      }
       
       if (onGastoUpdated) {
         onGastoUpdated();
@@ -51,40 +58,66 @@ export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdat
       console.error('Erro ao marcar como pago:', error);
       alert('Erro ao marcar como pago. Tente novamente.');
     } finally {
-      setMarkingAsPaid(prev => ({ ...prev, [gastoId]: false }));
+      setMarkingAsPaid(prev => ({ ...prev, [itemId]: false }));
     }
   };
 
-  const handleDateChange = (gastoId, date, e) => {
+  const handleDateChange = (itemId, date, e) => {
     e.stopPropagation();
-    setPaymentDates(prev => ({ ...prev, [gastoId]: date }));
+    setPaymentDates(prev => ({ ...prev, [itemId]: date }));
   };
-  
-  // Filtrar gastos com base na data de vencimento e status
-  const gastosComVencimento = gastos.filter(gasto => 
-    gasto.data_vencimento && 
-    gasto.status_pagamento !== 'pago' // Apenas gastos não pagos
-  );
 
-  const gastosVencidos = gastosComVencimento.filter(gasto => {
-    const dataVencimento = new Date(gasto.data_vencimento);
+  const gastosComVencimento = gastos
+    .filter(gasto => gasto.data_vencimento && gasto.status_pagamento !== 'pago')
+    .map((gasto) => ({
+      ...gasto,
+      tipo: 'gasto',
+      titulo: gasto.descricao,
+      status_exibicao: gasto.status_pagamento,
+      valor_exibicao: Number(gasto.valor || 0),
+      data_vencimento_exibicao: gasto.data_vencimento,
+    }));
+
+  const parcelasComVencimento = parcelas
+    .filter((parcela) => parcela.data_vencimento && parcela.status !== 'pago')
+    .map((parcela) => {
+      const gastoPai = gastos.find((gasto) => gasto.id === parcela.gasto_id);
+      if (!gastoPai) return null;
+
+      return {
+        ...parcela,
+        tipo: 'parcela',
+        titulo: gastoPai.descricao,
+        obra_id: gastoPai.obra_id,
+        gasto_pai: gastoPai,
+        status_exibicao: parcela.status,
+        valor_exibicao: Number(parcela.valor || 0),
+        data_vencimento_exibicao: parcela.data_vencimento,
+      };
+    })
+    .filter(Boolean);
+
+  const pagamentosComVencimento = [...gastosComVencimento, ...parcelasComVencimento];
+
+  const pagamentosVencidos = pagamentosComVencimento.filter(item => {
+    const dataVencimento = new Date(item.data_vencimento_exibicao);
     return isBefore(dataVencimento, hoje) && !isToday(dataVencimento);
   });
 
-  const gastosVencendoHoje = gastosComVencimento.filter(gasto => {
-    const dataVencimento = new Date(gasto.data_vencimento);
+  const pagamentosVencendoHoje = pagamentosComVencimento.filter(item => {
+    const dataVencimento = new Date(item.data_vencimento_exibicao);
     return isToday(dataVencimento);
   });
 
-  const gastosProximos10Dias = gastosComVencimento.filter(gasto => {
-    const dataVencimento = new Date(gasto.data_vencimento);
+  const pagamentosProximos10Dias = pagamentosComVencimento.filter(item => {
+    const dataVencimento = new Date(item.data_vencimento_exibicao);
     const diasParaVencimento = differenceInDays(dataVencimento, hoje);
     return diasParaVencimento > 0 && diasParaVencimento <= 10;
   });
 
-  const totalPagamentos = gastosVencidos.length + gastosVencendoHoje.length + gastosProximos10Dias.length;
-  const valorTotalPagamentos = [...gastosVencidos, ...gastosVencendoHoje, ...gastosProximos10Dias].reduce(
-    (total, gasto) => total + (gasto.valor || 0),
+  const totalPagamentos = pagamentosVencidos.length + pagamentosVencendoHoje.length + pagamentosProximos10Dias.length;
+  const valorTotalPagamentos = [...pagamentosVencidos, ...pagamentosVencendoHoje, ...pagamentosProximos10Dias].reduce(
+    (total, item) => total + (item.valor_exibicao || 0),
     0
   );
 
@@ -92,30 +125,42 @@ export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdat
     return null;
   }
 
-  const renderGastoItem = (gasto, tipo) => {
+  const renderGastoItem = (item, tipo) => {
     const cores = {
       vencido: 'text-red-600 bg-red-50 border-red-200 hover:bg-red-100',
       hoje: 'text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100',
       proximo: 'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100'
     };
 
-    const valorTotalRecorrencia = Number(gasto.valor_total_recorrencia || 0);
-    const valorEntrada = Number(gasto.valor_entrada || 0);
-    const valorPagoAteAgora = valorEntrada + (gasto.status_pagamento === 'pago' ? Number(gasto.valor || 0) : 0);
-    const valorRestante = gasto.eh_recorrente && valorTotalRecorrencia > 0
+    const gastoBase = item.tipo === 'parcela' ? item.gasto_pai : item;
+    const valorTotalRecorrencia = Number(gastoBase?.valor_total_recorrencia || 0);
+    const valorEntrada = Number(gastoBase?.valor_entrada || 0);
+    const valorPagoParcelas = parcelas
+      .filter((parcela) => parcela.gasto_id === gastoBase?.id && parcela.status === 'pago')
+      .reduce((sum, parcela) => sum + Number(parcela.valor || 0), 0);
+    const valorPagoAteAgora = valorEntrada + valorPagoParcelas;
+    const valorRestante = gastoBase?.eh_recorrente && valorTotalRecorrencia > 0
       ? Math.max(valorTotalRecorrencia - valorPagoAteAgora, 0)
       : null;
+    const itemId = `${item.tipo}-${item.id}`;
 
     return (
       <div 
-        key={gasto.id} 
+        key={itemId} 
         className={`p-3 rounded-lg border transition-colors duration-200 ${cores[tipo]} flex items-start gap-3`}
       >
-        <div className="flex-1 cursor-pointer" onClick={() => onEditGasto && onEditGasto(gasto)}>
-          <h4 className="font-medium">{gasto.descricao}</h4>
+        <div className="flex-1 cursor-pointer" onClick={() => onEditGasto && onEditGasto(gastoBase)}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className="font-medium">{item.titulo}</h4>
+            {item.tipo === 'parcela' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
+                <Repeat className="w-3 h-3" />
+                Parcela {item.numero_parcela}
+              </span>
+            )}
+          </div>
           <p className="text-sm opacity-75">
-            Parcela: R$ {gasto.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            {gasto.fornecedor && ` • ${gasto.fornecedor}`}
+            Valor: R$ {Number(item.valor_exibicao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </p>
           {valorRestante !== null && (
             <p className="text-sm font-semibold mt-1">
@@ -124,24 +169,24 @@ export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdat
           )}
           <div className="flex items-center gap-1 mt-1 text-sm">
             <Calendar className="w-3 h-3" />
-            {format(new Date(gasto.data_vencimento), 'dd/MM/yyyy', { locale: ptBR })}
+            {format(new Date(item.data_vencimento_exibicao), 'dd/MM/yyyy', { locale: ptBR })}
           </div>
         </div>
         <div className="flex flex-col gap-2 items-end">
           <Input
             type="date"
-            value={paymentDates[gasto.id] || getTodayDate()}
-            onChange={(e) => handleDateChange(gasto.id, e.target.value, e)}
+            value={paymentDates[itemId] || getTodayDate()}
+            onChange={(e) => handleDateChange(itemId, e.target.value, e)}
             onClick={(e) => e.stopPropagation()}
             className="h-8 text-xs w-[130px]"
           />
           <Button
             size="sm"
-            onClick={(e) => handleMarkAsPaid(gasto, e)}
-            disabled={markingAsPaid[gasto.id]}
+            onClick={(e) => handleMarkAsPaid(item, e)}
+            disabled={markingAsPaid[itemId]}
             className="bg-green-600 hover:bg-green-700 h-8 text-xs whitespace-nowrap"
           >
-            {markingAsPaid[gasto.id] ? (
+            {markingAsPaid[itemId] ? (
               'Marcando...'
             ) : (
               <>
@@ -189,46 +234,46 @@ export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdat
       {isExpanded && (
         <CardContent className="space-y-6">
           {/* Vencidos */}
-          {gastosVencidos.length > 0 && (
+          {pagamentosVencidos.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="w-4 h-4 text-red-600" />
                 <h3 className="font-semibold text-red-600">
-                  Vencidos ({gastosVencidos.length})
+                  Vencidos ({pagamentosVencidos.length})
                 </h3>
               </div>
               <div className="space-y-2">
-                {gastosVencidos.map(gasto => renderGastoItem(gasto, 'vencido'))}
+                {pagamentosVencidos.map(item => renderGastoItem(item, 'vencido'))}
               </div>
             </div>
           )}
 
           {/* Vencendo Hoje */}
-          {gastosVencendoHoje.length > 0 && (
+          {pagamentosVencendoHoje.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="w-4 h-4 text-orange-600" />
                 <h3 className="font-semibold text-orange-600">
-                  Vencendo Hoje ({gastosVencendoHoje.length})
+                  Vencendo Hoje ({pagamentosVencendoHoje.length})
                 </h3>
               </div>
               <div className="space-y-2">
-                {gastosVencendoHoje.map(gasto => renderGastoItem(gasto, 'hoje'))}
+                {pagamentosVencendoHoje.map(item => renderGastoItem(item, 'hoje'))}
               </div>
             </div>
           )}
 
           {/* Próximos 10 dias */}
-          {gastosProximos10Dias.length > 0 && (
+          {pagamentosProximos10Dias.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle className="w-4 h-4 text-blue-600" />
                 <h3 className="font-semibold text-blue-600">
-                  Próximos 10 dias ({gastosProximos10Dias.length})
+                  Próximos 10 dias ({pagamentosProximos10Dias.length})
                 </h3>
               </div>
               <div className="space-y-2">
-                {gastosProximos10Dias.map(gasto => renderGastoItem(gasto, 'proximo'))}
+                {pagamentosProximos10Dias.map(item => renderGastoItem(item, 'proximo'))}
               </div>
             </div>
           )}
