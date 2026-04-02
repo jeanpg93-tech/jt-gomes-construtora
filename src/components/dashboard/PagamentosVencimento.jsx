@@ -83,6 +83,10 @@ export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdat
   });
 
   const totalPagamentos = gastosVencidos.length + gastosVencendoHoje.length + gastosProximos10Dias.length;
+  const valorTotalPagamentos = [...gastosVencidos, ...gastosVencendoHoje, ...gastosProximos10Dias].reduce(
+    (total, gasto) => total + (gasto.valor || 0),
+    0
+  );
 
   if (totalPagamentos === 0) {
     return null;
@@ -143,13 +147,18 @@ export default function PagamentosVencimento({ gastos, onEditGasto, onGastoUpdat
     <Card className="shadow-lg border-0">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-orange-600" />
-            Pagamentos em Vencimento
-            <span className="text-sm font-normal text-slate-500">
-              ({totalPagamentos} {totalPagamentos === 1 ? 'pagamento' : 'pagamentos'})
-            </span>
-          </CardTitle>
+          <div>
+            <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-600" />
+              Pagamentos em Vencimento
+              <span className="text-sm font-normal text-slate-500">
+                ({totalPagamentos} {totalPagamentos === 1 ? 'pagamento' : 'pagamentos'})
+              </span>
+            </CardTitle>
+            <p className="text-sm text-slate-600 mt-1">
+              Valor total: <span className="font-semibold text-slate-800">R$ {valorTotalPagamentos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </p>
+          </div>
           <Button
             variant="ghost"
             size="sm"
