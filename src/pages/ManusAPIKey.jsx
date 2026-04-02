@@ -25,38 +25,67 @@ Envie a chave em um dos formatos:
   "payload": { ... }
 }
 
+## CRUD Genérico
+Também aceita este formato:
+{
+  "secret": "<API_KEY>",
+  "entityName": "Compra",
+  "operation": "create",
+  "data": {
+    "descricao": "20 kg Rejunte",
+    "valor": 65,
+    "data": "2026-04-02",
+    "obra_id": "...",
+    "categoria_id": "..."
+  }
+}
+
+Observações importantes:
+- entityName "Compra" é tratado como entidade "Gasto"
+- Para create/update, a API aceita tanto "data" na raiz quanto payload.data
+- Campos de data aceitam "YYYY-MM-DD" e também ISO 8601; a API converte automaticamente para YYYY-MM-DD
+
 ## Endpoints Semânticos Disponíveis
 
 ### OBRAS
-- endpoint: "/obras" — listar obras ativas (para vincular despesas)
+- endpoint: "/obras" — listar obras ativas
 
-### BOLETOS / CONTAS A PAGAR (entidade Gasto com vencimento)
-- endpoint: "/boletos" — listar boletos
-  payload: { status: "pendente"|"pago"|"vencidos", obra_id, vencimento_de, vencimento_ate, limit }
+### BOLETOS / CONTAS A PAGAR
+- endpoint: "/boletos" — listar boletos/gastos com vencimento
+  payload: { status, obra_id, vencimento_de, vencimento_ate, limit, incluir_recorrencia }
 - endpoint: "/boletos/id" — detalhes de um boleto
   payload: { id }
 - endpoint: "/boletos/criar" — criar novo boleto
-  payload: { descricao, valor, vencimento, obra_id, categoria_id, fornecedor_id }
-- endpoint: "/boletos/pagar" — dar baixa / marcar como pago
-  payload: { id, data_pagamento (opcional), forma_pagamento (opcional) }
+  payload: { descricao, valor, data, data_vencimento|vencimento, obra_id, categoria_id, fornecedor_id, forma_pagamento, status_pagamento, eh_recorrente, valor_total_recorrencia, valor_entrada, data_entrada, quantidade_parcelas }
+- endpoint: "/boletos/pagar" — marcar boleto como pago
+  payload: { id, data_pagamento, forma_pagamento }
 - endpoint: "/boletos/deletar" — remover boleto
   payload: { id }
 
 ### COMPRAS / DESPESAS
 - endpoint: "/compras" — listar compras/despesas
-  payload: { obra_id, categoria_id, limit }
+  payload: { obra_id, categoria_id, limit, incluir_recorrencia }
 - endpoint: "/compras/criar" — registrar nova compra
-  payload: { descricao, valor, data, obra_id, categoria_id, fornecedor_id, subcategoria_id, etapa_obra_ids }
+  payload: { descricao, valor, data, data_vencimento, data_pagamento, obra_id, categoria_id, fornecedor_id, subcategoria_id, etapa_obra_ids, forma_pagamento, status_pagamento, observacoes, eh_recorrente, valor_total_recorrencia, valor_entrada, data_entrada, quantidade_parcelas }
 
-## CRUD Genérico (para qualquer entidade)
-{
-  "secret": "<API_KEY>",
-  "entityName": "Obra",
-  "operation": "list",
-  "payload": { "limit": 10 }
-}
-Entidades: Obra, Gasto, Receita, Fornecedor, GastoAdministrativo, CategoriaGasto, CategoriaReceita, SubcategoriaGasto, SubcategoriaGasto2, EtapaObra, Contrato, Recibo, Pessoa
-Operações: list, get, create, update, delete, filter, bulkCreate
+### PARCELAS DE GASTOS RECORRENTES
+- endpoint: "/parcelas" — listar parcelas
+  payload: { gasto_id, status, vencimento_de, vencimento_ate, limit }
+- endpoint: "/parcelas/criar" — criar parcela
+  payload: { gasto_id, numero_parcela, descricao, valor, data_vencimento, data_pagamento, status }
+- endpoint: "/parcelas/pagar" — marcar parcela como paga
+  payload: { id, data_pagamento }
+
+## Resposta com recorrência
+Quando incluir_recorrencia=true, os gastos recorrentes retornam com:
+- parcelas: lista de parcelas vinculadas
+- recorrencia_resumo: total_parcelas, parcelas_pagas, parcelas_pendentes, valor_entrada, valor_pago_parcelas, valor_pago_total, valor_pendente_parcelas, proxima_parcela
+
+## Entidades disponíveis no CRUD
+Obra, Gasto, Compra, ParcelaGasto, Receita, Fornecedor, GastoAdministrativo, CategoriaGasto, CategoriaReceita, SubcategoriaGasto, SubcategoriaGasto2, EtapaObra, Contrato, Recibo, Pessoa
+
+## Operações disponíveis
+list, get, create, bulkCreate, update, delete, filter, listAll, count
 
 ## Formato de Resposta
 { "success": true, "data": [...], "message": "..." }`;
@@ -143,7 +172,6 @@ export default function ManusAPIKey() {
         <p className="text-slate-500 mt-1">Copie os campos abaixo e configure no Abacus IA.</p>
       </div>
 
-      {/* Passo a passo */}
       <Card className="border-blue-100 bg-blue-50/50">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm text-blue-800 flex items-center gap-2">
@@ -157,12 +185,11 @@ export default function ManusAPIKey() {
             <li>Cole a <strong>URL do endpoint</strong> da função</li>
             <li>Configure a autenticação com o <strong>header x-api-key</strong> ou envie <code>"secret"</code> no body</li>
             <li>Use o <strong>valor do segredo</strong> abaixo como chave</li>
-            <li>Salve e teste com o endpoint <code>/obras</code>!</li>
+            <li>Salve e teste com o endpoint <code>/obras</code> ou <code>/compras</code></li>
           </ol>
         </CardContent>
       </Card>
 
-      {/* URL do Endpoint */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -177,7 +204,6 @@ export default function ManusAPIKey() {
         </CardContent>
       </Card>
 
-      {/* Campos para copiar */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">

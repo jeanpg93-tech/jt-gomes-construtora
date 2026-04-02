@@ -3,7 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 const API_SECRET = "J&T_GOMES_CONSTRUTORA_API";
 
 function checkAuth(req, body) {
-    const provided = req.headers.get("x-api-secret") 
+    const provided = req.headers.get("x-api-secret")
         || req.headers.get("x-api-key")
         || (req.headers.get("authorization") || "").replace("Bearer ", "")
         || body?.secret;
@@ -18,7 +18,70 @@ function err(message, status = 400) {
     return Response.json({ success: false, error: message }, { status });
 }
 
-// Helper: busca todos os registros paginando internamente
+function normalizeDate(value, fallback = null) {
+    if (!value) return fallback;
+    if (typeof value !== 'string') return value;
+    if (value.includes('T')) return value.slice(0, 10);
+    return value;
+}
+
+function normalizeGastoPayload(input = {}) {
+    return {
+        ...input,
+        valor: input.valor !== undefined ? Number(input.valor) : input.valor,
+        valor_total_recorrencia: input.valor_total_recorrencia !== undefined ? Number(input.valor_total_recorrencia) : input.valor_total_recorrencia,
+        valor_entrada: input.valor_entrada !== undefined ? Number(input.valor_entrada) : input.valor_entrada,
+        quantidade_parcelas: input.quantidade_parcelas !== undefined ? Number(input.quantidade_parcelas) : input.quantidade_parcelas,
+        data: normalizeDate(input.data, new Date().toISOString().split('T')[0]),
+        data_vencimento: normalizeDate(input.data_vencimento),
+        data_pagamento: normalizeDate(input.data_pagamento),
+        data_entrada: normalizeDate(input.data_entrada),
+        eh_recorrente: input.eh_recorrente === true || input.eh_recorrente === 'true',
+    };
+}
+
+function normalizeParcelaPayload(input = {}) {
+    return {
+        ...input,
+        valor: input.valor !== undefined ? Number(input.valor) : input.valor,
+        numero_parcela: input.numero_parcela !== undefined ? Number(input.numero_parcela) : input.numero_parcela,
+        data_vencimento: normalizeDate(input.data_vencimento),
+        data_pagamento: normalizeDate(input.data_pagamento),
+    };
+}
+
+function enrichGastoRecorrencia(gasto, parcelas) {
+    const parcelasDoGasto = parcelas
+        .filter((parcela) => parcela.gasto_id === gasto.id)
+        .sort((a, b) => (a.numero_parcela || 0) - (b.numero_parcela || 0));
+
+    const valorEntrada = Number(gasto.valor_entrada || 0);
+    const valorPagoParcelas = parcelasDoGasto
+        .filter((parcela) => parcela.status === 'pago')
+        .reduce((sum, parcela) => sum + Number(parcela.valor || 0), 0);
+
+    const valorPendenteParcelas = parcelasDoGasto
+        .filter((parcela) => parcela.status !== 'pago')
+        .reduce((sum, parcela) => sum + Number(parcela.valor || 0), 0);
+
+    const proximaParcela = parcelasDoGasto.find((parcela) => parcela.status !== 'pago') || null;
+
+    return {
+        ...gasto,
+        parcelas: parcelasDoGasto,
+        recorrencia_resumo: {
+            total_parcelas: parcelasDoGasto.length,
+            parcelas_pagas: parcelasDoGasto.filter((parcela) => parcela.status === 'pago').length,
+            parcelas_pendentes: parcelasDoGasto.filter((parcela) => parcela.status !== 'pago').length,
+            valor_entrada,
+            valor_pago_parcelas: valorPagoParcelas,
+            valor_pago_total: valorEntrada + valorPagoParcelas,
+            valor_pendente_parcelas: valorPendenteParcelas,
+            proxima_parcela: proximaParcela,
+        }
+    };
+}
+
 async function fetchAll(entityClient, query = {}, sort = null) {
     const all = [];
     let skip = 0;
@@ -43,128 +106,152 @@ Deno.serve(async (req) => {
         }
 
         const entities = base44.asServiceRole.entities;
-        const { endpoint, operation, entityName, payload } = body;
+        const { endpoint, operation, entityName } = body;
+        const payload = body.payload || body.data || {};
 
-        // ─── SEMANTIC ENDPOINTS ───────────────────────────────────────────────
-
-        // GET /obras — listar obras ativas
         if (endpoint === "/obras" || endpoint === "obras") {
             const obras = await entities.Obra.filter({ ativa: true }, '-created_date', 100);
             return ok(obras, `${obras.length} obras encontradas`);
         }
 
-        // GET /boletos — listar boletos (contas a pagar = Gastos)
         if (endpoint === "/boletos" || endpoint === "boletos") {
-            const { status, vencimento_ate, vencimento_de, obra_id, limit = 100 } = payload || {};
+            const { status, vencimento_ate, vencimento_de, obra_id, limit = 100, incluir_recorrencia = true } = payload;
             let query = {};
-            if (status) query.status_pagamento = status;
+            if (status && status !== 'vencidos') query.status_pagamento = status;
             if (obra_id) query.obra_id = obra_id;
 
             let gastos = await entities.Gasto.filter(query, 'data_vencimento', limit);
+            const parcelas = incluir_recorrencia ? await fetchAll(entities.ParcelaGasto, {}, 'data_vencimento') : [];
 
-            // Filtros de data de vencimento
-            if (vencimento_de) gastos = gastos.filter(g => g.data_vencimento >= vencimento_de);
-            if (vencimento_ate) gastos = gastos.filter(g => g.data_vencimento <= vencimento_ate);
+            if (vencimento_de) gastos = gastos.filter((g) => g.data_vencimento >= normalizeDate(vencimento_de));
+            if (vencimento_ate) gastos = gastos.filter((g) => g.data_vencimento <= normalizeDate(vencimento_ate));
 
-            // Vencidos: pendentes com vencimento anterior a hoje
             if (status === "vencidos") {
                 const hoje = new Date().toISOString().split('T')[0];
-                gastos = await entities.Gasto.filter({ status_pagamento: "pendente" }, 'data_vencimento', limit);
-                gastos = gastos.filter(g => g.data_vencimento && g.data_vencimento < hoje);
+                gastos = gastos.filter((g) => g.status_pagamento !== 'pago' && g.data_vencimento && g.data_vencimento < hoje);
             }
 
-            return ok(gastos, `${gastos.length} boletos encontrados`);
+            const resultado = gastos.map((gasto) => {
+                if (!incluir_recorrencia || !gasto.eh_recorrente) return gasto;
+                return enrichGastoRecorrencia(gasto, parcelas);
+            });
+
+            return ok(resultado, `${resultado.length} boletos encontrados`);
         }
 
-        // GET /boletos/:id — detalhes de um boleto
         if (endpoint === "/boletos/id" || endpoint === "boletos/id") {
             if (!payload?.id) return err("id é obrigatório");
             const boleto = await entities.Gasto.get(payload.id);
-            return ok(boleto);
+            if (!boleto.eh_recorrente) return ok(boleto);
+            const parcelas = await fetchAll(entities.ParcelaGasto, { gasto_id: boleto.id }, 'numero_parcela');
+            return ok(enrichGastoRecorrencia(boleto, parcelas));
         }
 
-        // POST /boletos/criar — criar boleto (Gasto com vencimento)
         if (endpoint === "/boletos/criar" || endpoint === "boletos/criar") {
-            const { descricao, valor, vencimento, fornecedor_id, categoria_id, obra_id } = payload || {};
-            if (!descricao || !valor || !obra_id || !categoria_id) {
+            const data = normalizeGastoPayload({
+                ...payload,
+                data_vencimento: payload.vencimento || payload.data_vencimento,
+                status_pagamento: payload.status_pagamento || 'pendente',
+            });
+
+            if (!data.descricao || data.valor === undefined || !data.obra_id || !data.categoria_id) {
                 return err("descricao, valor, obra_id e categoria_id são obrigatórios");
             }
-            const boleto = await entities.Gasto.create({
-                descricao,
-                valor: parseFloat(valor),
-                data: new Date().toISOString().split('T')[0],
-                data_vencimento: vencimento,
-                fornecedor_id,
-                categoria_id,
-                obra_id,
-                status_pagamento: "pendente"
-            });
+
+            const boleto = await entities.Gasto.create(data);
             return ok(boleto, "Boleto criado com sucesso");
         }
 
-        // PUT /boletos/pagar — dar baixa no boleto
         if (endpoint === "/boletos/pagar" || endpoint === "boletos/pagar") {
             if (!payload?.id) return err("id é obrigatório");
             const hoje = new Date().toISOString().split('T')[0];
             const atualizado = await entities.Gasto.update(payload.id, {
                 status_pagamento: "pago",
-                data_pagamento: payload.data_pagamento || hoje,
+                data_pagamento: normalizeDate(payload.data_pagamento, hoje),
                 forma_pagamento: payload.forma_pagamento
             });
             return ok(atualizado, "Boleto marcado como pago");
         }
 
-        // DELETE /boletos/deletar — remover boleto
         if (endpoint === "/boletos/deletar" || endpoint === "boletos/deletar") {
             if (!payload?.id) return err("id é obrigatório");
             await entities.Gasto.delete(payload.id);
             return ok({ id: payload.id }, "Boleto removido com sucesso");
         }
 
-        // GET /gastos/todos — retornar TODOS os gastos sem limite (pagina internamente)
         if (endpoint === "/gastos/todos" || endpoint === "gastos/todos") {
-            const { obra_id, categoria_id } = payload || {};
+            const { obra_id, categoria_id, incluir_recorrencia = true } = payload;
             let query = {};
             if (obra_id) query.obra_id = obra_id;
             if (categoria_id) query.categoria_id = categoria_id;
             const todos = await fetchAll(entities.Gasto, query, '-data');
-            return ok(todos, `${todos.length} gastos encontrados (total)`);
+            if (!incluir_recorrencia) {
+                return ok(todos, `${todos.length} gastos encontrados (total)`);
+            }
+            const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
+            const resultado = todos.map((gasto) => gasto.eh_recorrente ? enrichGastoRecorrencia(gasto, parcelas) : gasto);
+            return ok(resultado, `${resultado.length} gastos encontrados (total)`);
         }
 
-        // GET /compras — listar compras/despesas
         if (endpoint === "/compras" || endpoint === "compras") {
-            const { obra_id, categoria_id, limit = 100 } = payload || {};
+            const { obra_id, categoria_id, limit = 100, incluir_recorrencia = true } = payload;
             let query = {};
             if (obra_id) query.obra_id = obra_id;
             if (categoria_id) query.categoria_id = categoria_id;
             const compras = await entities.Gasto.filter(query, '-data', limit);
-            return ok(compras, `${compras.length} compras encontradas`);
+            if (!incluir_recorrencia) {
+                return ok(compras, `${compras.length} compras encontradas`);
+            }
+            const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
+            const resultado = compras.map((gasto) => gasto.eh_recorrente ? enrichGastoRecorrencia(gasto, parcelas) : gasto);
+            return ok(resultado, `${resultado.length} compras encontradas`);
         }
 
-        // POST /compras/criar — registrar nova compra/despesa
         if (endpoint === "/compras/criar" || endpoint === "compras/criar") {
-            const { descricao, valor, data, fornecedor_id, obra_id, categoria_id, subcategoria_id, etapa_obra_ids } = payload || {};
-            if (!descricao || !valor || !obra_id || !categoria_id) {
+            const data = normalizeGastoPayload(payload);
+            if (!data.descricao || data.valor === undefined || !data.obra_id || !data.categoria_id) {
                 return err("descricao, valor, obra_id e categoria_id são obrigatórios");
             }
             const compra = await entities.Gasto.create({
-                descricao,
-                valor: parseFloat(valor),
-                data: data || new Date().toISOString().split('T')[0],
-                fornecedor_id,
-                obra_id,
-                categoria_id,
-                subcategoria_id,
-                etapa_obra_ids,
-                status_pagamento: "pago"
+                ...data,
+                status_pagamento: data.status_pagamento || (data.data_pagamento ? 'pago' : 'pendente')
             });
             return ok(compra, "Compra registrada com sucesso");
         }
 
-        // ─── GENERIC ENTITY CRUD (backward compatibility) ─────────────────────
+        if (endpoint === "/parcelas" || endpoint === "parcelas") {
+            const { gasto_id, status, vencimento_de, vencimento_ate, limit = 100 } = payload;
+            let query = {};
+            if (gasto_id) query.gasto_id = gasto_id;
+            if (status) query.status = status;
+            let parcelas = await entities.ParcelaGasto.filter(query, 'data_vencimento', limit);
+            if (vencimento_de) parcelas = parcelas.filter((p) => p.data_vencimento >= normalizeDate(vencimento_de));
+            if (vencimento_ate) parcelas = parcelas.filter((p) => p.data_vencimento <= normalizeDate(vencimento_ate));
+            return ok(parcelas, `${parcelas.length} parcelas encontradas`);
+        }
+
+        if (endpoint === "/parcelas/criar" || endpoint === "parcelas/criar") {
+            const data = normalizeParcelaPayload(payload);
+            if (!data.gasto_id || data.numero_parcela === undefined || data.valor === undefined) {
+                return err("gasto_id, numero_parcela e valor são obrigatórios");
+            }
+            const parcela = await entities.ParcelaGasto.create(data);
+            return ok(parcela, "Parcela criada com sucesso");
+        }
+
+        if (endpoint === "/parcelas/pagar" || endpoint === "parcelas/pagar") {
+            if (!payload?.id) return err("id é obrigatório");
+            const hoje = new Date().toISOString().split('T')[0];
+            const parcela = await entities.ParcelaGasto.update(payload.id, {
+                status: 'pago',
+                data_pagamento: normalizeDate(payload.data_pagamento, hoje)
+            });
+            return ok(parcela, "Parcela marcada como paga");
+        }
 
         if (entityName && operation) {
-            const entityClient = entities[entityName];
+            const normalizedEntityName = entityName === 'Compra' ? 'Gasto' : entityName;
+            const entityClient = entities[normalizedEntityName];
             if (!entityClient) return err(`Entidade "${entityName}" não encontrada`, 404);
 
             let result;
@@ -176,18 +263,34 @@ Deno.serve(async (req) => {
                     if (!payload?.id) return err("ID é obrigatório para get");
                     result = await entityClient.get(payload.id);
                     break;
-                case 'create':
-                    if (!payload?.data) return err("data é obrigatório para create");
-                    result = await entityClient.create(payload.data);
+                case 'create': {
+                    const createData = body.data || payload?.data || payload;
+                    if (!createData || Object.keys(createData).length === 0) return err("data é obrigatório para create");
+                    result = await entityClient.create(
+                        normalizedEntityName === 'Gasto' ? normalizeGastoPayload(createData) :
+                        normalizedEntityName === 'ParcelaGasto' ? normalizeParcelaPayload(createData) :
+                        createData
+                    );
                     break;
-                case 'bulkCreate':
-                    if (!payload?.data || !Array.isArray(payload.data)) return err("data (array) é obrigatório para bulkCreate");
-                    result = await entityClient.bulkCreate(payload.data);
+                }
+                case 'bulkCreate': {
+                    const bulkData = body.data || payload?.data;
+                    if (!bulkData || !Array.isArray(bulkData)) return err("data (array) é obrigatório para bulkCreate");
+                    result = await entityClient.bulkCreate(bulkData);
                     break;
-                case 'update':
-                    if (!payload?.id || !payload?.data) return err("id e data são obrigatórios para update");
-                    result = await entityClient.update(payload.id, payload.data);
+                }
+                case 'update': {
+                    const updateData = body.data || payload?.data;
+                    const updateId = payload?.id || body.id;
+                    if (!updateId || !updateData) return err("id e data são obrigatórios para update");
+                    result = await entityClient.update(
+                        updateId,
+                        normalizedEntityName === 'Gasto' ? normalizeGastoPayload(updateData) :
+                        normalizedEntityName === 'ParcelaGasto' ? normalizeParcelaPayload(updateData) :
+                        updateData
+                    );
                     break;
+                }
                 case 'delete':
                     if (!payload?.id) return err("ID é obrigatório para delete");
                     result = await entityClient.delete(payload.id);
@@ -196,11 +299,9 @@ Deno.serve(async (req) => {
                     result = await entityClient.filter(payload?.query || {}, payload?.sort, payload?.limit, payload?.skip);
                     break;
                 case 'listAll':
-                    // Busca TODOS os registros paginando internamente — sem limite de 100
                     result = await fetchAll(entityClient, payload?.query || {}, payload?.sort);
                     break;
                 case 'count': {
-                    // Conta todos os registros
                     const all = await fetchAll(entityClient, payload?.query || {});
                     result = { total: all.length };
                     break;
