@@ -20,6 +20,7 @@ export default function GastoListItem({ gasto, parcelas, obras, categorias, subc
     .filter(Boolean);
 
   const resumoRecorrencia = getResumoRecorrencia(gasto, parcelas);
+  const derivedStatus = resumoRecorrencia ? (Number(resumoRecorrencia.pendenteTotal || 0) > 0 ? 'programado' : 'pago') : gasto.status_pagamento;
 
   const getStatusColor = (status) => {
     const colors = {
@@ -124,8 +125,8 @@ export default function GastoListItem({ gasto, parcelas, obras, categorias, subc
                     {subcategoria.nome}
                   </Badge>
                 )}
-                <Badge className={`${getStatusColor(gasto.status_pagamento)} border`}>
-                  {getStatusLabel(gasto.status_pagamento)}
+                <Badge className={`${getStatusColor(derivedStatus)} border`}>
+                  {getStatusLabel(derivedStatus)}
                 </Badge>
                 {resumoRecorrencia && (
                   <Badge className="bg-violet-100 text-violet-800 border-violet-200 border flex items-center gap-1">

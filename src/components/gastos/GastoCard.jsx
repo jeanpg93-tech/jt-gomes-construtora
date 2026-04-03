@@ -31,6 +31,7 @@ export default function GastoCard({ gasto, parcelas, obras, categorias, subcateg
     .filter(Boolean);
 
   const resumoRecorrencia = getResumoRecorrencia(gasto, parcelas);
+  const derivedStatus = resumoRecorrencia ? (Number(resumoRecorrencia.pendenteTotal || 0) > 0 ? 'programado' : 'pago') : gasto.status_pagamento;
 
   const getStatusColor = (status) => {
     const colors = {
@@ -131,8 +132,8 @@ export default function GastoCard({ gasto, parcelas, obras, categorias, subcateg
                   {subcategoria.nome}
                 </Badge>
               )}
-              <Badge className={`${getStatusColor(gasto.status_pagamento)} border`}>
-                {getStatusLabel(gasto.status_pagamento)}
+              <Badge className={`${getStatusColor(derivedStatus)} border`}>
+                {getStatusLabel(derivedStatus)}
               </Badge>
               {resumoRecorrencia && (
                 <Badge className="bg-violet-100 text-violet-800 border-violet-200 border flex items-center gap-1">
@@ -257,7 +258,7 @@ export default function GastoCard({ gasto, parcelas, obras, categorias, subcateg
           </div>
         )}
 
-        {gasto.status_pagamento === 'pago' && gasto.data_pagamento && (
+        {!resumoRecorrencia && derivedStatus === 'pago' && gasto.data_pagamento && (
           <div className="bg-green-50 rounded-lg p-3 border border-green-200">
             <p className="text-sm text-green-700 font-medium mb-1">Pago em</p>
             <div className="flex items-center gap-2 text-green-800">
