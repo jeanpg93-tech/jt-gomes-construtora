@@ -66,9 +66,12 @@ function enrichGastoRecorrencia(gasto, parcelas) {
 
     const proximaParcela = parcelasDoGasto.find((parcela) => parcela.status !== 'pago') || null;
 
+    const statusCalculado = valorPendenteParcelas > 0 ? 'programado' : 'pago';
+
     return {
         ...gasto,
         parcelas: parcelasDoGasto,
+        status_calculado: statusCalculado,
         recorrencia_resumo: {
             total_parcelas: parcelasDoGasto.length,
             parcelas_pagas: parcelasDoGasto.filter((parcela) => parcela.status === 'pago').length,
@@ -189,7 +192,7 @@ Deno.serve(async (req) => {
                 return ok(todos, `${todos.length} gastos encontrados (total)`);
             }
             const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
-            const resultado = todos.map((gasto) => gasto.eh_recorrente ? enrichGastoRecorrencia(gasto, parcelas) : gasto);
+            const resultado = todos.map((gasto) => gasto.eh_recorrente ? enrichGastoRecorrencia(gasto, parcelas) : { ...gasto, status_calculado: gasto.status_pagamento });
             return ok(resultado, `${resultado.length} gastos encontrados (total)`);
         }
 
@@ -204,7 +207,7 @@ Deno.serve(async (req) => {
                 return ok(compras, `${compras.length} compras encontradas`);
             }
             const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
-            const resultado = compras.map((gasto) => gasto.eh_recorrente ? enrichGastoRecorrencia(gasto, parcelas) : gasto);
+            const resultado = compras.map((gasto) => gasto.eh_recorrente ? enrichGastoRecorrencia(gasto, parcelas) : { ...gasto, status_calculado: gasto.status_pagamento });
             return ok(resultado, `${resultado.length} compras encontradas`);
         }
 
@@ -319,7 +322,28 @@ Deno.serve(async (req) => {
                 default:
                     return err(`Operação "${operation}" não suportada. Use: list, get, create, bulkCreate, update, delete, filter, listAll, count`);
             }
-            return ok(result);
+            // Enriquecimento para Gasto (lista ou item único)
+            let finalResult = result;
+            if (normalizedEntityName === 'Gasto') {
+                const includeRec = (body.incluir_recorrencia ?? payload?.incluir_recorrencia);
+                const shouldInclude = includeRec === undefined ? true : includeRec;
+                if (Array.isArray(result)) {
+                    if (shouldInclude) {
+                        const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
+                        finalResult = result.map((g) => g.eh_recorrente ? enrichGastoRecorrencia(g, parcelas) : { ...g, status_calculado: g.status_pagamento });
+                    } else {
+                        finalResult = result.map((g) => ({ ...g, status_calculado: g.status_pagamento }));
+                    }
+                } else if (result && typeof result === 'object') {
+                    if (shouldInclude && result.eh_recorrente) {
+                        const parcelasDoGasto = await fetchAll(entities.ParcelaGasto, { gasto_id: result.id }, 'numero_parcela');
+                        finalResult = enrichGastoRecorrencia(result, parcelasDoGasto);
+                    } else {
+                        finalResult = { ...result, status_calculado: result.status_pagamento };
+                    }
+                }
+            }
+            return ok(finalResult);
         }
 
         return err("Informe 'endpoint' (ex: '/boletos') ou 'entityName' + 'operation'");
