@@ -194,10 +194,11 @@ Deno.serve(async (req) => {
         }
 
         if (endpoint === "/compras" || endpoint === "compras") {
-            const { obra_id, categoria_id, limit = 100, incluir_recorrencia = true } = payload;
+            const { obra_id, categoria_id, status_pagamento, limit = 100, incluir_recorrencia = true } = payload;
             let query = {};
             if (obra_id) query.obra_id = obra_id;
             if (categoria_id) query.categoria_id = categoria_id;
+            if (status_pagamento) query.status_pagamento = status_pagamento;
             const compras = await entities.Gasto.filter(query, '-data', limit);
             if (!incluir_recorrencia) {
                 return ok(compras, `${compras.length} compras encontradas`);
@@ -256,9 +257,18 @@ Deno.serve(async (req) => {
 
             let result;
             switch (operation) {
-                case 'list':
-                    result = await entityClient.list(payload?.sort, payload?.limit, payload?.query, payload?.skip);
+                case 'list': {
+                    const filters = body.filters || payload?.filters || payload?.query || {};
+                    const sort = body.sort || payload?.sort;
+                    const limit = (body.limit ?? payload?.limit);
+                    const skip = (body.skip ?? payload?.skip);
+                    if (filters && Object.keys(filters).length > 0) {
+                        result = await entityClient.filter(filters, sort, limit, skip);
+                    } else {
+                        result = await entityClient.list(sort, limit);
+                    }
                     break;
+                }
                 case 'get':
                     if (!payload?.id) return err("ID é obrigatório para get");
                     result = await entityClient.get(payload.id);
