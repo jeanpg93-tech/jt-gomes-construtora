@@ -174,8 +174,9 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
       data: finalDataField, // Adjusted for 'contabilização' based on payment status
       fornecedor_id: formData.fornecedor_id || null,
       forma_pagamento: formData.forma_pagamento || null,
+      status_pagamento: formData.eh_recorrente ? 'programado' : formData.status_pagamento,
       data_vencimento: formData.data_vencimento || null,
-      data_pagamento: formData.data_pagamento || null,
+      data_pagamento: formData.eh_recorrente ? null : (formData.data_pagamento || null),
       observacoes: formData.observacoes || null,
       eh_recorrente: !!formData.eh_recorrente,
       valor_total_recorrencia: formData.eh_recorrente && formData.valor_total_recorrencia ? Number(formData.valor_total_recorrencia) : null,
@@ -215,6 +216,20 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
         ? currentEtapas.filter(id => id !== etapaId)
         : [...currentEtapas, etapaId];
       return { ...prev, etapa_obra_ids: newEtapas };
+    });
+  };
+
+  const handleToggleRecorrente = (checked) => {
+    const isRec = !!checked;
+    setFormData(prev => {
+      if (!isRec) return { ...prev, eh_recorrente: false };
+      const shouldResetStatus = prev.status_pagamento === 'pago';
+      return {
+        ...prev,
+        eh_recorrente: true,
+        status_pagamento: shouldResetStatus ? 'programado' : prev.status_pagamento,
+        data_pagamento: '',
+      };
     });
   };
 
@@ -481,7 +496,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                   <Checkbox
                     id="eh_recorrente"
                     checked={!!formData.eh_recorrente}
-                    onCheckedChange={(checked) => handleChange('eh_recorrente', !!checked)}
+                    onCheckedChange={handleToggleRecorrente}
                   />
                   <Label htmlFor="eh_recorrente" className="cursor-pointer">Este gasto é recorrente / parcelado</Label>
                 </div>
