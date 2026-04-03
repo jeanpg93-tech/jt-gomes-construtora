@@ -83,8 +83,16 @@ function enrichGastoRecorrencia(gasto, parcelas) {
 
     const statusCalculado = valorPendenteParcelas > 0 ? 'programado' : 'pago';
 
+    const valorEfetivoPago = valorEntrada + valorPagoParcelas;
+    const valorEfetivoPendente = valorPendenteParcelas;
+    const valorTotalReal = valorEntrada + parcelasDoGasto.reduce((sum, p) => sum + Number(p.valor || 0), 0);
+
     return {
         ...gasto,
+        // Campos simplificados para soma direta (usar estes em vez de 'valor')
+        valor_efetivo_pago: valorEfetivoPago,
+        valor_efetivo_pendente: valorEfetivoPendente,
+        valor_total_real: valorTotalReal,
         parcelas: parcelasDoGasto,
         status_calculado: statusCalculado,
         recorrencia_resumo: {
@@ -93,8 +101,9 @@ function enrichGastoRecorrencia(gasto, parcelas) {
             parcelas_pendentes: parcelasDoGasto.filter((parcela) => parcela.status !== 'pago').length,
             valor_entrada: valorEntrada,
             valor_pago_parcelas: valorPagoParcelas,
-            valor_pago_total: valorEntrada + valorPagoParcelas,
-            valor_pendente_parcelas: valorPendenteParcelas,
+            valor_pago_total: valorEfetivoPago,
+            valor_pendente_parcelas: valorEfetivoPendente,
+            valor_total_real: valorTotalReal,
             proxima_parcela: proximaParcela,
         }
     };
@@ -207,9 +216,18 @@ Deno.serve(async (req) => {
             const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
             const resultado = todos.map((gasto) => {
                 const temParcelas = parcelas.some((p) => p.gasto_id === gasto.id);
-                return (gasto.eh_recorrente || temParcelas)
-                    ? enrichGastoRecorrencia(gasto, parcelas)
-                    : { ...gasto, status_calculado: gasto.status_pagamento };
+                if (gasto.eh_recorrente || temParcelas) {
+                    return enrichGastoRecorrencia(gasto, parcelas);
+                }
+                const vPago = gasto.status_pagamento === 'pago' ? Number(gasto.valor || 0) : 0;
+                const vPendente = gasto.status_pagamento !== 'pago' ? Number(gasto.valor || 0) : 0;
+                return {
+                    ...gasto,
+                    valor_efetivo_pago: vPago,
+                    valor_efetivo_pendente: vPendente,
+                    valor_total_real: Number(gasto.valor || 0),
+                    status_calculado: gasto.status_pagamento,
+                };
             });
             return ok(resultado, `${resultado.length} gastos encontrados (total)`);
         }
@@ -224,9 +242,18 @@ Deno.serve(async (req) => {
             const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
             const resultado = compras.map((gasto) => {
                 const temParcelas = parcelas.some((p) => p.gasto_id === gasto.id);
-                return (gasto.eh_recorrente || temParcelas)
-                    ? enrichGastoRecorrencia(gasto, parcelas)
-                    : { ...gasto, status_calculado: gasto.status_pagamento };
+                if (gasto.eh_recorrente || temParcelas) {
+                    return enrichGastoRecorrencia(gasto, parcelas);
+                }
+                const vPago = gasto.status_pagamento === 'pago' ? Number(gasto.valor || 0) : 0;
+                const vPendente = gasto.status_pagamento !== 'pago' ? Number(gasto.valor || 0) : 0;
+                return {
+                    ...gasto,
+                    valor_efetivo_pago: vPago,
+                    valor_efetivo_pendente: vPendente,
+                    valor_total_real: Number(gasto.valor || 0),
+                    status_calculado: gasto.status_pagamento,
+                };
             });
             return ok(resultado, `${resultado.length} compras encontradas`);
         }
@@ -383,12 +410,27 @@ Deno.serve(async (req) => {
                         const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
                         finalResult = result.map((g) => {
                             const temParcelas = parcelas.some((p) => p.gasto_id === g.id);
-                            return (g.eh_recorrente || temParcelas)
-                                ? enrichGastoRecorrencia(g, parcelas)
-                                : { ...g, status_calculado: g.status_pagamento };
+                            if (g.eh_recorrente || temParcelas) {
+                                return enrichGastoRecorrencia(g, parcelas);
+                            }
+                            const vPago = g.status_pagamento === 'pago' ? Number(g.valor || 0) : 0;
+                            const vPendente = g.status_pagamento !== 'pago' ? Number(g.valor || 0) : 0;
+                            return {
+                                ...g,
+                                valor_efetivo_pago: vPago,
+                                valor_efetivo_pendente: vPendente,
+                                valor_total_real: Number(g.valor || 0),
+                                status_calculado: g.status_pagamento,
+                            };
                         });
                     } else {
-                        finalResult = result.map((g) => ({ ...g, status_calculado: g.status_pagamento }));
+                        finalResult = result.map((g) => ({
+                            ...g,
+                            valor_efetivo_pago: g.status_pagamento === 'pago' ? Number(g.valor || 0) : 0,
+                            valor_efetivo_pendente: g.status_pagamento !== 'pago' ? Number(g.valor || 0) : 0,
+                            valor_total_real: Number(g.valor || 0),
+                            status_calculado: g.status_pagamento,
+                        }));
                     }
                 } else if (result && typeof result === 'object') {
                     if (shouldInclude) {
@@ -396,10 +438,24 @@ Deno.serve(async (req) => {
                         if (result.eh_recorrente || (Array.isArray(parcelasDoGasto) && parcelasDoGasto.length > 0)) {
                             finalResult = enrichGastoRecorrencia(result, parcelasDoGasto);
                         } else {
-                            finalResult = { ...result, status_calculado: result.status_pagamento };
+                            const vPago = result.status_pagamento === 'pago' ? Number(result.valor || 0) : 0;
+                            const vPendente = result.status_pagamento !== 'pago' ? Number(result.valor || 0) : 0;
+                            finalResult = {
+                                ...result,
+                                valor_efetivo_pago: vPago,
+                                valor_efetivo_pendente: vPendente,
+                                valor_total_real: Number(result.valor || 0),
+                                status_calculado: result.status_pagamento,
+                            };
                         }
                     } else {
-                        finalResult = { ...result, status_calculado: result.status_pagamento };
+                        finalResult = {
+                            ...result,
+                            valor_efetivo_pago: result.status_pagamento === 'pago' ? Number(result.valor || 0) : 0,
+                            valor_efetivo_pendente: result.status_pagamento !== 'pago' ? Number(result.valor || 0) : 0,
+                            valor_total_real: Number(result.valor || 0),
+                            status_calculado: result.status_pagamento,
+                        };
                     }
                 }
             }
