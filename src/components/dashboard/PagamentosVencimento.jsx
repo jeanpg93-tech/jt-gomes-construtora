@@ -3,9 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertTriangle, Calendar, Clock, CheckCircle, ChevronDown, ChevronUp, CheckCircle2, Repeat } from "lucide-react";
-import { format, differenceInDays, isBefore, isToday } from "date-fns";
+import { format, differenceInDays, isBefore, isToday, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { base44 } from "@/api/base44Client";
+
+// Converte string "YYYY-MM-DD" para Date local correta (sem problemas de timezone)
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
 
 export default function PagamentosVencimento({ gastos, parcelas = [], onEditGasto, onGastoUpdated }) {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -21,15 +28,7 @@ export default function PagamentosVencimento({ gastos, parcelas = [], onEditGast
     return `${year}-${month}-${day}`;
   };
 
-  const addOneDay = (dateString) => {
-    if (!dateString) return null;
-    const date = new Date(dateString + 'T00:00:00Z');
-    date.setDate(date.getDate() + 1);
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
+  // Não é mais necessário addOneDay — o bug de timezone foi corrigido
 
   const handleMarkAsPaid = async (item, e) => {
     e.stopPropagation();
@@ -47,7 +46,7 @@ export default function PagamentosVencimento({ gastos, parcelas = [], onEditGast
       } else {
         await base44.entities.Gasto.update(item.id, {
           status_pagamento: 'pago',
-          data_pagamento: addOneDay(dataPagamento)
+          data_pagamento: dataPagamento
         });
       }
       
@@ -99,19 +98,24 @@ export default function PagamentosVencimento({ gastos, parcelas = [], onEditGast
 
   const pagamentosComVencimento = [...gastosComVencimento, ...parcelasComVencimento];
 
+  const hojeSemHora = startOfDay(hoje);
+
   const pagamentosVencidos = pagamentosComVencimento.filter(item => {
-    const dataVencimento = new Date(item.data_vencimento_exibicao);
-    return isBefore(dataVencimento, hoje) && !isToday(dataVencimento);
+    const dataVencimento = parseLocalDate(item.data_vencimento_exibicao);
+    if (!dataVencimento) return false;
+    return isBefore(dataVencimento, hojeSemHora) && !isToday(dataVencimento);
   });
 
   const pagamentosVencendoHoje = pagamentosComVencimento.filter(item => {
-    const dataVencimento = new Date(item.data_vencimento_exibicao);
+    const dataVencimento = parseLocalDate(item.data_vencimento_exibicao);
+    if (!dataVencimento) return false;
     return isToday(dataVencimento);
   });
 
   const pagamentosProximos10Dias = pagamentosComVencimento.filter(item => {
-    const dataVencimento = new Date(item.data_vencimento_exibicao);
-    const diasParaVencimento = differenceInDays(dataVencimento, hoje);
+    const dataVencimento = parseLocalDate(item.data_vencimento_exibicao);
+    if (!dataVencimento) return false;
+    const diasParaVencimento = differenceInDays(dataVencimento, hojeSemHora);
     return diasParaVencimento > 0 && diasParaVencimento <= 10;
   });
 
@@ -169,7 +173,7 @@ export default function PagamentosVencimento({ gastos, parcelas = [], onEditGast
           )}
           <div className="flex items-center gap-1 mt-1 text-sm">
             <Calendar className="w-3 h-3" />
-            {format(new Date(item.data_vencimento_exibicao), 'dd/MM/yyyy', { locale: ptBR })}
+            {format(parseLocalDate(item.data_vencimento_exibicao), 'dd/MM/yyyy', { locale: ptBR })}
           </div>
         </div>
         <div className="flex flex-col gap-2 items-end">
