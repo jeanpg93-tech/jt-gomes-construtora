@@ -205,7 +205,12 @@ Deno.serve(async (req) => {
                 return ok(todos, `${todos.length} gastos encontrados (total)`);
             }
             const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
-            const resultado = todos.map((gasto) => gasto.eh_recorrente ? enrichGastoRecorrencia(gasto, parcelas) : { ...gasto, status_calculado: gasto.status_pagamento });
+            const resultado = todos.map((gasto) => {
+                const temParcelas = parcelas.some((p) => p.gasto_id === gasto.id);
+                return (gasto.eh_recorrente || temParcelas)
+                    ? enrichGastoRecorrencia(gasto, parcelas)
+                    : { ...gasto, status_calculado: gasto.status_pagamento };
+            });
             return ok(resultado, `${resultado.length} gastos encontrados (total)`);
         }
 
@@ -217,7 +222,12 @@ Deno.serve(async (req) => {
                 return ok(compras, `${compras.length} compras encontradas`);
             }
             const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
-            const resultado = compras.map((gasto) => gasto.eh_recorrente ? enrichGastoRecorrencia(gasto, parcelas) : { ...gasto, status_calculado: gasto.status_pagamento });
+            const resultado = compras.map((gasto) => {
+                const temParcelas = parcelas.some((p) => p.gasto_id === gasto.id);
+                return (gasto.eh_recorrente || temParcelas)
+                    ? enrichGastoRecorrencia(gasto, parcelas)
+                    : { ...gasto, status_calculado: gasto.status_pagamento };
+            });
             return ok(resultado, `${resultado.length} compras encontradas`);
         }
 
@@ -371,14 +381,23 @@ Deno.serve(async (req) => {
                 if (Array.isArray(result)) {
                     if (shouldInclude) {
                         const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
-                        finalResult = result.map((g) => g.eh_recorrente ? enrichGastoRecorrencia(g, parcelas) : { ...g, status_calculado: g.status_pagamento });
+                        finalResult = result.map((g) => {
+                            const temParcelas = parcelas.some((p) => p.gasto_id === g.id);
+                            return (g.eh_recorrente || temParcelas)
+                                ? enrichGastoRecorrencia(g, parcelas)
+                                : { ...g, status_calculado: g.status_pagamento };
+                        });
                     } else {
                         finalResult = result.map((g) => ({ ...g, status_calculado: g.status_pagamento }));
                     }
                 } else if (result && typeof result === 'object') {
-                    if (shouldInclude && result.eh_recorrente) {
+                    if (shouldInclude) {
                         const parcelasDoGasto = await fetchAll(entities.ParcelaGasto, { gasto_id: result.id }, 'numero_parcela');
-                        finalResult = enrichGastoRecorrencia(result, parcelasDoGasto);
+                        if (result.eh_recorrente || (Array.isArray(parcelasDoGasto) && parcelasDoGasto.length > 0)) {
+                            finalResult = enrichGastoRecorrencia(result, parcelasDoGasto);
+                        } else {
+                            finalResult = { ...result, status_calculado: result.status_pagamento };
+                        }
                     } else {
                         finalResult = { ...result, status_calculado: result.status_pagamento };
                     }
