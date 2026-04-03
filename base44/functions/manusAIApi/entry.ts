@@ -41,13 +41,28 @@ function normalizeGastoPayload(input = {}) {
 }
 
 function normalizeParcelaPayload(input = {}) {
-    return {
-        ...input,
-        valor: input.valor !== undefined ? Number(input.valor) : input.valor,
-        numero_parcela: input.numero_parcela !== undefined ? Number(input.numero_parcela) : input.numero_parcela,
-        data_vencimento: normalizeDate(input.data_vencimento),
-        data_pagamento: normalizeDate(input.data_pagamento),
-    };
+  return {
+      ...input,
+      valor: input.valor !== undefined ? Number(input.valor) : input.valor,
+      numero_parcela: input.numero_parcela !== undefined ? Number(input.numero_parcela) : input.numero_parcela,
+      data_vencimento: normalizeDate(input.data_vencimento),
+      data_pagamento: normalizeDate(input.data_pagamento),
+  };
+}
+
+function sanitizeFilters(raw = {}) {
+  const out = {};
+  for (const [k, v] of Object.entries(raw || {})) {
+    if (v === undefined || v === null) continue;
+    if (typeof v === 'string') {
+      const trimmed = v.trim();
+      if (trimmed === '') continue;
+      out[k] = trimmed;
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
 }
 
 function enrichGastoRecorrencia(gasto, parcelas) {
@@ -76,7 +91,7 @@ function enrichGastoRecorrencia(gasto, parcelas) {
             total_parcelas: parcelasDoGasto.length,
             parcelas_pagas: parcelasDoGasto.filter((parcela) => parcela.status === 'pago').length,
             parcelas_pendentes: parcelasDoGasto.filter((parcela) => parcela.status !== 'pago').length,
-            valor_entrada,
+            valor_entrada: valorEntrada,
             valor_pago_parcelas: valorPagoParcelas,
             valor_pago_total: valorEntrada + valorPagoParcelas,
             valor_pendente_parcelas: valorPendenteParcelas,
@@ -183,10 +198,8 @@ Deno.serve(async (req) => {
         }
 
         if (endpoint === "/gastos/todos" || endpoint === "gastos/todos") {
-            const { obra_id, categoria_id, incluir_recorrencia = true } = payload;
-            let query = {};
-            if (obra_id) query.obra_id = obra_id;
-            if (categoria_id) query.categoria_id = categoria_id;
+            const { obra_id, categoria_id, subcategoria_id, incluir_recorrencia = true } = payload;
+            const query = sanitizeFilters({ obra_id, categoria_id, subcategoria_id });
             const todos = await fetchAll(entities.Gasto, query, '-data');
             if (!incluir_recorrencia) {
                 return ok(todos, `${todos.length} gastos encontrados (total)`);
@@ -198,11 +211,7 @@ Deno.serve(async (req) => {
 
         if (endpoint === "/compras" || endpoint === "compras") {
             const { obra_id, categoria_id, subcategoria_id, status_pagamento, limit = 100, incluir_recorrencia = true } = payload;
-            const query = {};
-            if (obra_id) query.obra_id = obra_id;
-            if (categoria_id) query.categoria_id = categoria_id;
-            if (subcategoria_id) query.subcategoria_id = subcategoria_id;
-            if (status_pagamento) query.status_pagamento = status_pagamento;
+            const query = sanitizeFilters({ obra_id, categoria_id, subcategoria_id, status_pagamento });
             const compras = await entities.Gasto.filter(query, '-data', limit);
             if (!incluir_recorrencia) {
                 return ok(compras, `${compras.length} compras encontradas`);
@@ -263,12 +272,24 @@ Deno.serve(async (req) => {
             switch (operation) {
                 case 'list': {
                     const rawFilters = body.filters || payload?.filters || payload?.query || {};
-                    const filters = Object.fromEntries(Object.entries(rawFilters).filter(([_, v]) => v !== undefined && v !== null && v !== ''));
-                    const sort = body.sort || payload?.sort;
-                    const limit = (body.limit ?? payload?.limit);
-                    const skip = (body.skip ?? payload?.skip);
+                    const filters = sanitizeFilters(rawFilters);
+                    const sort = (body.sort ?? payload?.sort);
+                    const limit = (body.limit ?? payload?.limit ?? 1000);
+                    const skip = (body.skip ?? payload?.skip ?? 0);
                     if (Object.keys(filters).length > 0) {
                         result = await entityClient.filter(filters, sort, limit, skip);
+                        // Fallback defensivo: se vier vazio, tenta em memória (obras/categorias/subcategorias/status)
+                        if (normalizedEntityName === 'Gasto' && Array.isArray(result) && result.length === 0 &&
+                            (filters.obra_id || filters.categoria_id || filters.subcategoria_id || filters.status_pagamento)) {
+                            const all = await fetchAll(entityClient, {}, sort);
+                            result = all.filter((g) => {
+                                if (filters.obra_id && g.obra_id !== filters.obra_id) return false;
+                                if (filters.categoria_id && g.categoria_id !== filters.categoria_id) return false;
+                                if (filters.subcategoria_id && g.subcategoria_id !== filters.subcategoria_id) return false;
+                                if (filters.status_pagamento && g.status_pagamento !== filters.status_pagamento) return false;
+                                return true;
+                            });
+                        }
                     } else {
                         result = await entityClient.list(sort, limit);
                     }
@@ -312,8 +333,23 @@ Deno.serve(async (req) => {
                     break;
                 case 'filter': {
                     const rawFilters = body.filters || payload?.filters || payload?.query || {};
-                    const filters = Object.fromEntries(Object.entries(rawFilters).filter(([_, v]) => v !== undefined && v !== null && v !== ''));
-                    result = await entityClient.filter(filters, payload?.sort, payload?.limit, payload?.skip);
+                    const filters = sanitizeFilters(rawFilters);
+                    const sort = (body.sort ?? payload?.sort);
+                    const limit = (body.limit ?? payload?.limit ?? 1000);
+                    const skip = (body.skip ?? payload?.skip ?? 0);
+                    result = await entityClient.filter(filters, sort, limit, skip);
+                    // Fallback defensivo para Gasto
+                    if (normalizedEntityName === 'Gasto' && Array.isArray(result) && result.length === 0 &&
+                        (filters.obra_id || filters.categoria_id || filters.subcategoria_id || filters.status_pagamento)) {
+                        const all = await fetchAll(entityClient, {}, sort);
+                        result = all.filter((g) => {
+                            if (filters.obra_id && g.obra_id !== filters.obra_id) return false;
+                            if (filters.categoria_id && g.categoria_id !== filters.categoria_id) return false;
+                            if (filters.subcategoria_id && g.subcategoria_id !== filters.subcategoria_id) return false;
+                            if (filters.status_pagamento && g.status_pagamento !== filters.status_pagamento) return false;
+                            return true;
+                        });
+                    }
                     break;
                 }
                 case 'listAll':
