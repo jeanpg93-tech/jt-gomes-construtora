@@ -197,10 +197,11 @@ Deno.serve(async (req) => {
         }
 
         if (endpoint === "/compras" || endpoint === "compras") {
-            const { obra_id, categoria_id, status_pagamento, limit = 100, incluir_recorrencia = true } = payload;
-            let query = {};
+            const { obra_id, categoria_id, subcategoria_id, status_pagamento, limit = 100, incluir_recorrencia = true } = payload;
+            const query = {};
             if (obra_id) query.obra_id = obra_id;
             if (categoria_id) query.categoria_id = categoria_id;
+            if (subcategoria_id) query.subcategoria_id = subcategoria_id;
             if (status_pagamento) query.status_pagamento = status_pagamento;
             const compras = await entities.Gasto.filter(query, '-data', limit);
             if (!incluir_recorrencia) {
@@ -261,11 +262,12 @@ Deno.serve(async (req) => {
             let result;
             switch (operation) {
                 case 'list': {
-                    const filters = body.filters || payload?.filters || payload?.query || {};
+                    const rawFilters = body.filters || payload?.filters || payload?.query || {};
+                    const filters = Object.fromEntries(Object.entries(rawFilters).filter(([_, v]) => v !== undefined && v !== null && v !== ''));
                     const sort = body.sort || payload?.sort;
                     const limit = (body.limit ?? payload?.limit);
                     const skip = (body.skip ?? payload?.skip);
-                    if (filters && Object.keys(filters).length > 0) {
+                    if (Object.keys(filters).length > 0) {
                         result = await entityClient.filter(filters, sort, limit, skip);
                     } else {
                         result = await entityClient.list(sort, limit);
@@ -308,9 +310,12 @@ Deno.serve(async (req) => {
                     if (!payload?.id) return err("ID é obrigatório para delete");
                     result = await entityClient.delete(payload.id);
                     break;
-                case 'filter':
-                    result = await entityClient.filter(payload?.query || {}, payload?.sort, payload?.limit, payload?.skip);
+                case 'filter': {
+                    const rawFilters = body.filters || payload?.filters || payload?.query || {};
+                    const filters = Object.fromEntries(Object.entries(rawFilters).filter(([_, v]) => v !== undefined && v !== null && v !== ''));
+                    result = await entityClient.filter(filters, payload?.sort, payload?.limit, payload?.skip);
                     break;
+                }
                 case 'listAll':
                     result = await fetchAll(entityClient, payload?.query || {}, payload?.sort);
                     break;
