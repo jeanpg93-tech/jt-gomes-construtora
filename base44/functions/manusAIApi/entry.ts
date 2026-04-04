@@ -142,12 +142,12 @@ Deno.serve(async (req) => {
         }
 
         if (endpoint === "/boletos" || endpoint === "boletos") {
-            const { status, vencimento_ate, vencimento_de, obra_id, limit = 100, incluir_recorrencia = true } = payload;
+            const { status, vencimento_ate, vencimento_de, obra_id, limit, skip = 0, incluir_recorrencia = true } = payload;
             let query = {};
             if (status && status !== 'vencidos') query.status_pagamento = status;
             if (obra_id) query.obra_id = obra_id;
 
-            let gastos = await entities.Gasto.filter(query, 'data_vencimento', limit);
+            let gastos = await fetchAll(entities.Gasto, query, 'data_vencimento');
             const parcelas = incluir_recorrencia ? await fetchAll(entities.ParcelaGasto, {}, 'data_vencimento') : [];
 
             if (vencimento_de) gastos = gastos.filter((g) => g.data_vencimento >= normalizeDate(vencimento_de));
@@ -158,12 +158,16 @@ Deno.serve(async (req) => {
                 gastos = gastos.filter((g) => g.status_pagamento !== 'pago' && g.data_vencimento && g.data_vencimento < hoje);
             }
 
+            const totalCount = gastos.length;
+            if (skip > 0) gastos = gastos.slice(skip);
+            if (limit) gastos = gastos.slice(0, limit);
+
             const resultado = gastos.map((gasto) => {
                 if (!incluir_recorrencia || !gasto.eh_recorrente) return gasto;
                 return enrichGastoRecorrencia(gasto, parcelas);
             });
 
-            return ok(resultado, `${resultado.length} boletos encontrados`);
+            return ok(resultado, `${resultado.length} de ${totalCount} boletos`);
         }
 
         if (endpoint === "/boletos/id" || endpoint === "boletos/id") {
@@ -207,11 +211,14 @@ Deno.serve(async (req) => {
         }
 
         if (endpoint === "/gastos/todos" || endpoint === "gastos/todos") {
-            const { obra_id, categoria_id, subcategoria_id, incluir_recorrencia = true } = payload;
+            const { obra_id, categoria_id, subcategoria_id, incluir_recorrencia = true, limit, skip = 0 } = payload;
             const query = sanitizeFilters({ obra_id, categoria_id, subcategoria_id });
-            const todos = await fetchAll(entities.Gasto, query, '-data');
+            let todos = await fetchAll(entities.Gasto, query, '-data');
+            const totalCount = todos.length;
+            if (skip > 0) todos = todos.slice(skip);
+            if (limit) todos = todos.slice(0, limit);
             if (!incluir_recorrencia) {
-                return ok(todos, `${todos.length} gastos encontrados (total)`);
+                return ok(todos, `${todos.length} de ${totalCount} gastos (total)`);
             }
             const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
             const resultado = todos.map((gasto) => {
@@ -229,15 +236,18 @@ Deno.serve(async (req) => {
                     status_calculado: gasto.status_pagamento,
                 };
             });
-            return ok(resultado, `${resultado.length} gastos encontrados (total)`);
+            return ok(resultado, `${resultado.length} de ${totalCount} gastos (total)`);
         }
 
         if (endpoint === "/compras" || endpoint === "compras") {
-            const { obra_id, categoria_id, subcategoria_id, status_pagamento, limit = 100, incluir_recorrencia = true } = payload;
+            const { obra_id, categoria_id, subcategoria_id, status_pagamento, limit, skip = 0, incluir_recorrencia = true } = payload;
             const query = sanitizeFilters({ obra_id, categoria_id, subcategoria_id, status_pagamento });
-            const compras = await entities.Gasto.filter(query, '-data', limit);
+            let compras = await fetchAll(entities.Gasto, query, '-data');
+            const totalCount = compras.length;
+            if (skip > 0) compras = compras.slice(skip);
+            if (limit) compras = compras.slice(0, limit);
             if (!incluir_recorrencia) {
-                return ok(compras, `${compras.length} compras encontradas`);
+                return ok(compras, `${compras.length} de ${totalCount} compras`);
             }
             const parcelas = await fetchAll(entities.ParcelaGasto, {}, 'numero_parcela');
             const resultado = compras.map((gasto) => {
@@ -255,7 +265,7 @@ Deno.serve(async (req) => {
                     status_calculado: gasto.status_pagamento,
                 };
             });
-            return ok(resultado, `${resultado.length} compras encontradas`);
+            return ok(resultado, `${resultado.length} de ${totalCount} compras`);
         }
 
         if (endpoint === "/compras/criar" || endpoint === "compras/criar") {
@@ -271,14 +281,17 @@ Deno.serve(async (req) => {
         }
 
         if (endpoint === "/parcelas" || endpoint === "parcelas") {
-            const { gasto_id, status, vencimento_de, vencimento_ate, limit = 100 } = payload;
+            const { gasto_id, status, vencimento_de, vencimento_ate, limit, skip = 0 } = payload;
             let query = {};
             if (gasto_id) query.gasto_id = gasto_id;
             if (status) query.status = status;
-            let parcelas = await entities.ParcelaGasto.filter(query, 'data_vencimento', limit);
+            let parcelas = await fetchAll(entities.ParcelaGasto, query, 'data_vencimento');
             if (vencimento_de) parcelas = parcelas.filter((p) => p.data_vencimento >= normalizeDate(vencimento_de));
             if (vencimento_ate) parcelas = parcelas.filter((p) => p.data_vencimento <= normalizeDate(vencimento_ate));
-            return ok(parcelas, `${parcelas.length} parcelas encontradas`);
+            const totalCount = parcelas.length;
+            if (skip > 0) parcelas = parcelas.slice(skip);
+            if (limit) parcelas = parcelas.slice(0, limit);
+            return ok(parcelas, `${parcelas.length} de ${totalCount} parcelas`);
         }
 
         if (endpoint === "/parcelas/criar" || endpoint === "parcelas/criar") {
