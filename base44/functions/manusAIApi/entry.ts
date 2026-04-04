@@ -322,6 +322,11 @@ Deno.serve(async (req) => {
             switch (operation) {
                 case 'list': {
                     const rawFilters = body.filters || payload?.filters || payload?.query || {};
+                    // Aceitar filtros comuns diretamente no payload (obra_id, categoria_id, etc.)
+                    if (payload?.obra_id && !rawFilters.obra_id) rawFilters.obra_id = payload.obra_id;
+                    if (payload?.categoria_id && !rawFilters.categoria_id) rawFilters.categoria_id = payload.categoria_id;
+                    if (payload?.subcategoria_id && !rawFilters.subcategoria_id) rawFilters.subcategoria_id = payload.subcategoria_id;
+                    if (payload?.status_pagamento && !rawFilters.status_pagamento) rawFilters.status_pagamento = payload.status_pagamento;
                     const filters = sanitizeFilters(rawFilters);
                     const sort = (body.sort ?? payload?.sort);
                     const limit = (body.limit ?? payload?.limit ?? 1000);
@@ -383,6 +388,11 @@ Deno.serve(async (req) => {
                     break;
                 case 'filter': {
                     const rawFilters = body.filters || payload?.filters || payload?.query || {};
+                    // Aceitar filtros comuns diretamente no payload
+                    if (payload?.obra_id && !rawFilters.obra_id) rawFilters.obra_id = payload.obra_id;
+                    if (payload?.categoria_id && !rawFilters.categoria_id) rawFilters.categoria_id = payload.categoria_id;
+                    if (payload?.subcategoria_id && !rawFilters.subcategoria_id) rawFilters.subcategoria_id = payload.subcategoria_id;
+                    if (payload?.status_pagamento && !rawFilters.status_pagamento) rawFilters.status_pagamento = payload.status_pagamento;
                     const filters = sanitizeFilters(rawFilters);
                     const sort = (body.sort ?? payload?.sort);
                     const limit = (body.limit ?? payload?.limit ?? 1000);
