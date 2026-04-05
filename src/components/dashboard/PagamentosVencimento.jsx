@@ -14,6 +14,84 @@ const parseLocalDate = (dateStr) => {
   return new Date(y, m - 1, d);
 };
 
+// Feriados nacionais fixos (MM-DD)
+const FERIADOS_FIXOS = [
+  '01-01', // Confraternização Universal
+  '04-21', // Tiradentes
+  '05-01', // Dia do Trabalho
+  '09-07', // Independência
+  '10-12', // Nossa Sra. Aparecida
+  '11-02', // Finados
+  '11-15', // Proclamação da República
+  '12-25', // Natal
+];
+
+// Calcula Páscoa (algoritmo de Meeus/Jones/Butcher)
+const calcularPascoa = (ano) => {
+  const a = ano % 19;
+  const b = Math.floor(ano / 100);
+  const c = ano % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mes = Math.floor((h + l - 7 * m + 114) / 31);
+  const dia = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(ano, mes - 1, dia);
+};
+
+const getFeriadosMoveis = (ano) => {
+  const pascoa = calcularPascoa(ano);
+  const carnaval = new Date(pascoa); carnaval.setDate(pascoa.getDate() - 47);
+  const carnaval2 = new Date(pascoa); carnaval2.setDate(pascoa.getDate() - 48);
+  const sextaSanta = new Date(pascoa); sextaSanta.setDate(pascoa.getDate() - 2);
+  const corpusChristi = new Date(pascoa); corpusChristi.setDate(pascoa.getDate() + 60);
+  return [carnaval, carnaval2, sextaSanta, corpusChristi].map(d => {
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mm}-${dd}`;
+  });
+};
+
+const isFeriado = (date) => {
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  if (FERIADOS_FIXOS.includes(`${mm}-${dd}`)) return true;
+  const yyyy = date.getFullYear();
+  const dateStr = `${yyyy}-${mm}-${dd}`;
+  return getFeriadosMoveis(yyyy).includes(dateStr);
+};
+
+const isDiaUtil = (date) => {
+  const dow = date.getDay();
+  if (dow === 0 || dow === 6) return false;
+  return !isFeriado(date);
+};
+
+const getProximoDiaUtil = (date) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + 1);
+  while (!isDiaUtil(next)) {
+    next.setDate(next.getDate() + 1);
+  }
+  return next;
+};
+
+const getInfoDiaUtil = (dateStr) => {
+  const date = parseLocalDate(dateStr);
+  if (!date) return null;
+  if (isDiaUtil(date)) return null;
+  const proximo = getProximoDiaUtil(date);
+  const dow = date.getDay();
+  const motivo = (dow === 0 || dow === 6) ? 'fim de semana' : 'feriado';
+  return { motivo, proximoDiaUtil: proximo };
+};
+
 export default function PagamentosVencimento({ gastos, parcelas = [], onEditGasto, onGastoUpdated }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [markingAsPaid, setMarkingAsPaid] = useState({});
@@ -166,6 +244,16 @@ export default function PagamentosVencimento({ gastos, parcelas = [], onEditGast
           <p className="text-sm opacity-75">
             Valor: R$ {Number(item.valor_exibicao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </p>
+          {(() => {
+            const info = getInfoDiaUtil(item.data_vencimento_exibicao);
+            if (!info) return null;
+            return (
+              <p className="text-xs mt-1 px-2 py-1 rounded-md bg-amber-100 text-amber-800 border border-amber-300 inline-flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                Vence em {info.motivo} — pagável em {format(info.proximoDiaUtil, 'EEEE, dd/MM', { locale: ptBR })}
+              </p>
+            );
+          })()}
           {valorRestante !== null && (
             <p className="text-sm font-semibold mt-1">
               Falta pagar: R$ {valorRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

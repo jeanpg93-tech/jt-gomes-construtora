@@ -489,6 +489,59 @@ Deno.serve(async (req) => {
             const { obra_id, dias = 10 } = payload;
             const hoje = new Date();
             const hojeStr = hoje.toISOString().split('T')[0];
+
+            // --- Lógica de dias úteis e feriados ---
+            const FERIADOS_FIXOS = ['01-01','04-21','05-01','09-07','10-12','11-02','11-15','12-25'];
+            const calcPascoa = (ano) => {
+                const a = ano % 19, b = Math.floor(ano / 100), c = ano % 100;
+                const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+                const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+                const i = Math.floor(c / 4), k = c % 4;
+                const l = (32 + 2 * e + 2 * i - h - k) % 7;
+                const m = Math.floor((a + 11 * h + 22 * l) / 451);
+                const mes = Math.floor((h + l - 7 * m + 114) / 31);
+                const dia = ((h + l - 7 * m + 114) % 31) + 1;
+                return new Date(ano, mes - 1, dia);
+            };
+            const getFeriadosMoveis = (ano) => {
+                const p = calcPascoa(ano);
+                return [-48, -47, -2, 60].map(offset => {
+                    const d = new Date(p); d.setDate(p.getDate() + offset);
+                    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                });
+            };
+            const isFeriado = (dateStr) => {
+                const mmdd = dateStr.slice(5);
+                if (FERIADOS_FIXOS.includes(mmdd)) return true;
+                const ano = parseInt(dateStr.slice(0,4));
+                return getFeriadosMoveis(ano).includes(dateStr);
+            };
+            const isDiaUtil = (dateStr) => {
+                const [y,m,d] = dateStr.split('-').map(Number);
+                const dt = new Date(y, m-1, d);
+                const dow = dt.getDay();
+                if (dow === 0 || dow === 6) return false;
+                return !isFeriado(dateStr);
+            };
+            const getProximoDiaUtil = (dateStr) => {
+                const [y,m,d] = dateStr.split('-').map(Number);
+                const dt = new Date(y, m-1, d);
+                dt.setDate(dt.getDate() + 1);
+                while (true) {
+                    const s = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+                    if (isDiaUtil(s)) return s;
+                    dt.setDate(dt.getDate() + 1);
+                }
+            };
+            const getInfoDiaUtil = (dateStr) => {
+                if (!dateStr) return null;
+                if (isDiaUtil(dateStr)) return null;
+                const [y,m,d] = dateStr.split('-').map(Number);
+                const dt = new Date(y, m-1, d);
+                const dow = dt.getDay();
+                const motivo = (dow === 0 || dow === 6) ? 'fim_de_semana' : 'feriado';
+                return { motivo, proximo_dia_util: getProximoDiaUtil(dateStr) };
+            };
             const limiteDate = new Date(hoje);
             limiteDate.setDate(limiteDate.getDate() + Number(dias));
             const limiteStr = limiteDate.toISOString().split('T')[0];
@@ -536,6 +589,15 @@ Deno.serve(async (req) => {
             const vencendoHoje = todos.filter(item => item.data_vencimento === hojeStr);
             const proximos = todos.filter(item => item.data_vencimento > hojeStr && item.data_vencimento <= limiteStr);
 
+            // Enriquece cada item com info de dia útil
+            const enriquecer = (item) => ({
+                ...item,
+                dia_util_info: getInfoDiaUtil(item.data_vencimento),
+            });
+            const vencidosEnriq = vencidos.map(enriquecer);
+            const vencendoHojeEnriq = vencendoHoje.map(enriquecer);
+            const proximosEnriq = proximos.map(enriquecer);
+
             const valorTotal = [...vencidos, ...vencendoHoje, ...proximos].reduce((s, i) => s + i.valor, 0);
 
             return ok({
@@ -549,9 +611,9 @@ Deno.serve(async (req) => {
                     data_referencia: hojeStr,
                     data_limite: limiteStr,
                 },
-                vencidos,
-                vencendo_hoje: vencendoHoje,
-                proximos,
+                vencidos: vencidosEnriq,
+                vencendo_hoje: vencendoHojeEnriq,
+                proximos: proximosEnriq,
             }, `${vencidos.length + vencendoHoje.length + proximos.length} pagamentos pendentes encontrados`);
         }
 
