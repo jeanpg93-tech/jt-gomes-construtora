@@ -485,7 +485,100 @@ Deno.serve(async (req) => {
             return ok(finalResult);
         }
 
-        return err("Informe 'endpoint' (ex: '/boletos') ou 'entityName' + 'operation'");
+        if (endpoint === "/pagamentos-pendentes" || endpoint === "pagamentos-pendentes") {
+            const { obra_id, dias = 10 } = payload;
+            const hoje = new Date();
+            const hojeStr = hoje.toISOString().split('T')[0];
+            const limiteDate = new Date(hoje);
+            limiteDate.setDate(limiteDate.getDate() + Number(dias));
+            const limiteStr = limiteDate.toISOString().split('T')[0];
+
+            const queryGastos = obra_id ? { obra_id } : {};
+            const todosGastos = await fetchAll(entities.Gasto, queryGastos, 'data_vencimento');
+            const todasParcelas = await fetchAll(entities.ParcelaGasto, {}, 'data_vencimento');
+
+            const gastosComVencimento = todosGastos
+                .filter(g => g.data_vencimento && g.status_pagamento !== 'pago')
+                .map(g => ({
+                    tipo: 'gasto',
+                    id: g.id,
+                    descricao: g.descricao,
+                    valor: Number(g.valor || 0),
+                    data_vencimento: g.data_vencimento,
+                    status_pagamento: g.status_pagamento,
+                    obra_id: g.obra_id,
+                    eh_recorrente: g.eh_recorrente || false,
+                }));
+
+            const parcelasComVencimento = todasParcelas
+                .filter(p => p.data_vencimento && p.status !== 'pago')
+                .map(p => {
+                    const gastoPai = todosGastos.find(g => g.id === p.gasto_id);
+                    if (!gastoPai) return null;
+                    if (obra_id && gastoPai.obra_id !== obra_id) return null;
+                    return {
+                        tipo: 'parcela',
+                        id: p.id,
+                        gasto_id: p.gasto_id,
+                        descricao: gastoPai.descricao,
+                        numero_parcela: p.numero_parcela,
+                        valor: Number(p.valor || 0),
+                        data_vencimento: p.data_vencimento,
+                        status: p.status,
+                        obra_id: gastoPai.obra_id,
+                    };
+                })
+                .filter(Boolean);
+
+            const todos = [...gastosComVencimento, ...parcelasComVencimento];
+
+            const vencidos = todos.filter(item => item.data_vencimento < hojeStr);
+            const vencendoHoje = todos.filter(item => item.data_vencimento === hojeStr);
+            const proximos = todos.filter(item => item.data_vencimento > hojeStr && item.data_vencimento <= limiteStr);
+
+            const valorTotal = [...vencidos, ...vencendoHoje, ...proximos].reduce((s, i) => s + i.valor, 0);
+
+            return ok({
+                resumo: {
+                    total_pagamentos: vencidos.length + vencendoHoje.length + proximos.length,
+                    valor_total: valorTotal,
+                    vencidos_count: vencidos.length,
+                    vencendo_hoje_count: vencendoHoje.length,
+                    proximos_count: proximos.length,
+                    periodo_dias: Number(dias),
+                    data_referencia: hojeStr,
+                    data_limite: limiteStr,
+                },
+                vencidos,
+                vencendo_hoje: vencendoHoje,
+                proximos,
+            }, `${vencidos.length + vencendoHoje.length + proximos.length} pagamentos pendentes encontrados`);
+        }
+
+        if (endpoint === "/pagamentos-pendentes/pagar" || endpoint === "pagamentos-pendentes/pagar") {
+            const { id, tipo, data_pagamento, forma_pagamento } = payload;
+            if (!id || !tipo) return err("id e tipo ('gasto' ou 'parcela') são obrigatórios");
+            const hoje = new Date().toISOString().split('T')[0];
+            const dataPag = normalizeDate(data_pagamento, hoje);
+
+            if (tipo === 'parcela') {
+                const parcela = await entities.ParcelaGasto.update(id, {
+                    status: 'pago',
+                    data_pagamento: dataPag,
+                });
+                return ok(parcela, "Parcela marcada como paga");
+            } else {
+                const updateData = {
+                    status_pagamento: 'pago',
+                    data_pagamento: dataPag,
+                };
+                if (forma_pagamento) updateData.forma_pagamento = forma_pagamento;
+                const gasto = await entities.Gasto.update(id, updateData);
+                return ok(gasto, "Gasto marcado como pago");
+            }
+        }
+
+        return err("Informe 'endpoint' (ex: '/boletos', '/pagamentos-pendentes') ou 'entityName' + 'operation'");
 
     } catch (error) {
         console.error("Erro na API J&T Gomes:", error.message);

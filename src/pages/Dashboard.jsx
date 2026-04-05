@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [editingGasto, setEditingGasto] = useState(null);
   const [userAuthenticated, setUserAuthenticated] = useState(false);
   const [etapasObra, setEtapasObra] = useState([]);
+  const [parcelas, setParcelas] = useState([]);
 
   useEffect(() => {
     checkUserAndLoadData();
@@ -53,13 +54,14 @@ export default function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [obraData, gastoData, receitaData, gastosAdminData, categoriaData, etapaData] = await Promise.all([
+      const [obraData, gastoData, receitaData, gastosAdminData, categoriaData, etapaData, parcelaData] = await Promise.all([
         base44.entities.Obra.list('-created_date'),
         base44.entities.Gasto.list('-created_date'),
         base44.entities.Receita.list('-created_date'),
-        base44.entities.GastoAdministrativo.list('-created_date'), // Fetch GastoAdministrativo
+        base44.entities.GastoAdministrativo.list('-created_date'),
         base44.entities.CategoriaGasto.list(),
-        base44.entities.EtapaObra.list()
+        base44.entities.EtapaObra.list(),
+        base44.entities.ParcelaGasto.list('-data_vencimento')
       ]);
       
       setObras(obraData);
@@ -68,6 +70,7 @@ export default function Dashboard() {
       setGastosAdmin(gastosAdminData); // Set state for administrative expenses
       setCategorias(categoriaData);
       setEtapasObra(etapaData.sort((a, b) => (a.ordem || 999) - (b.ordem || 999)));
+      setParcelas(parcelaData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -282,7 +285,8 @@ export default function Dashboard() {
 
       <div className="animate-slideInRight" style={{animationDelay: '0.1s'}}>
         <PagamentosVencimento 
-          gastos={gastosFiltradosParaVisualizacao} 
+          gastos={gastosFiltradosParaVisualizacao}
+          parcelas={parcelas}
           onEditGasto={handleEditGasto}
           onGastoUpdated={loadData}
         />
