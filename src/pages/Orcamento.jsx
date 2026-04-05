@@ -32,9 +32,7 @@ export default function Orcamento() {
       setGastos(gastosData);
       setCategorias(categoriasData);
       
-      if (obrasData.length > 0) {
-        setSelectedObraIds([obrasData[0].id]);
-      }
+      // Não pré-selecionar nenhuma obra — o usuário escolhe
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
