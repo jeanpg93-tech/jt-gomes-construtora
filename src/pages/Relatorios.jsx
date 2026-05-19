@@ -46,6 +46,7 @@ export default function Relatorios() {
   const [loading, setLoading] = useState(true);
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
+  const [hideRJ, setHideRJ] = useState(() => localStorage.getItem('_hrj') === '1');
 
   useEffect(() => {
     loadData();
@@ -148,7 +149,8 @@ export default function Relatorios() {
     return filtered;
   };
 
-  const gastosComDataFiltrada = filterByDate(gastos, dataInicio, dataFim, (item) => item.data_pagamento || item.data);
+  const gastosBase = hideRJ ? gastos.filter(g => !g.descricao?.toLowerCase().includes('retirada jean')) : gastos;
+  const gastosComDataFiltrada = filterByDate(gastosBase, dataInicio, dataFim, (item) => item.data_pagamento || item.data);
   const gastosFiltrados = applyGeneralFilters(gastosComDataFiltrada);
   const gastosAdminFiltrados = filterByDate(gastosAdmin, dataInicio, dataFim, (item) => item.data);
   const receitasFiltradas = applyGeneralFilters(filterByDate(receitas, dataInicio, dataFim, (item) => item.data));
@@ -219,7 +221,14 @@ export default function Relatorios() {
       <div className="print-hide">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Relatórios</h1>
+            <h1 
+              className="text-3xl font-bold text-slate-800 mb-2 select-none cursor-default"
+              onDoubleClick={() => {
+                const next = !hideRJ;
+                setHideRJ(next);
+                localStorage.setItem('_hrj', next ? '1' : '0');
+              }}
+            >Relatórios{hideRJ ? <span className="text-slate-200 text-xs ml-1">•</span> : ''}</h1>
             <p className="text-slate-600">Analise o desempenho de suas obras.</p>
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
