@@ -475,7 +475,7 @@ export default function Gastos() {
               localStorage.setItem('_hrj', next ? '1' : '0');
             }}
           >
-            Gastos{hideRJ ? ' ·' : ''}
+            Gastos{hideRJ ? <span className="text-slate-200 text-xs ml-1">•</span> : ''}
           </h1>
           <p className="text-slate-600">
             Controle todas as despesas das suas obras
