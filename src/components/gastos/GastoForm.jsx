@@ -72,7 +72,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   const [diaFixoParcelas, setDiaFixoParcelas] = useState('');
   const [dataInicioParcelas, setDataInicioParcelas] = useState(gasto?.data_vencimento ? formatDateForInput(gasto.data_vencimento) : '');
   const [parcelas, setParcelas] = useState([]);
-
+  const [isSaving, setIsSaving] = useState(false);
 
   // Estados para modais de criação rápida
   const [modalCategoria, setModalCategoria] = useState(false);
@@ -157,10 +157,12 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
     
-    let finalDataField = formData.data; // Default to the initial data (dataRegistro)
+    let finalDataField = formData.data;
     if (formData.status_pagamento === 'pago' && formData.data_pagamento) {
       finalDataField = formData.data_pagamento;
     } else if (formData.status_pagamento === 'programado' && formData.data_vencimento) {
@@ -171,7 +173,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
       ...formData,
       numero_sequencial: formData.numero_sequencial,
       valor: formData.eh_recorrente ? formData.valor_total_recorrencia : formData.valor,
-      data: finalDataField, // Adjusted for 'contabilização' based on payment status
+      data: finalDataField,
       fornecedor_id: formData.fornecedor_id || null,
       forma_pagamento: formData.forma_pagamento || null,
       status_pagamento: formData.eh_recorrente ? 'programado' : formData.status_pagamento,
@@ -183,14 +185,17 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
       valor_entrada: formData.eh_recorrente && formData.valor_entrada !== '' ? Number(formData.valor_entrada) : null,
       data_entrada: formData.eh_recorrente && formData.data_entrada ? formData.data_entrada : null,
       quantidade_parcelas: formData.eh_recorrente && formData.quantidade_parcelas ? Number(formData.quantidade_parcelas) : null,
-      // arquivo_anexo removed
       subcategoria_id: formData.subcategoria_id || null,
       etapa_obra_ids: formData.etapa_obra_ids.length > 0 ? formData.etapa_obra_ids : null,
       origem_registro: 'web',
       parcelas_recorrencia: formData.eh_recorrente ? parcelas : []
     };
 
-    onSave(processedData);
+    try {
+      await onSave(processedData);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const parseMoney = (value) => {
@@ -670,9 +675,9 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                 <Button type="button" variant="outline" onClick={onCancel}>
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                <Button type="submit" disabled={isSaving} className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                   <Save className="w-4 h-4 mr-2" />
-                  Salvar
+                  {isSaving ? 'Salvando...' : 'Salvar'}
                 </Button>
               </div>
             </form>
