@@ -44,8 +44,9 @@ export default function CriacaoRapidaModal({ tipo, open, onOpenChange, onSuccess
           break;
         case 'fornecedor':
           novoItem = await base44.entities.Fornecedor.create({ 
+            tipo: 'fisica',
             nome, 
-            contato: contato || null,
+            telefone: contato || null,
             observacoes: observacoes || null
           });
           break;

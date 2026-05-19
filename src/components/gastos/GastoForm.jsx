@@ -78,7 +78,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   const [modalCategoria, setModalCategoria] = useState(false);
   const [modalSubcategoria, setModalSubcategoria] = useState(false);
   const [modalEtapa, setModalEtapa] = useState(false);
-  // Removed modalFornecedor state
+  const [modalFornecedor, setModalFornecedor] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -297,7 +297,11 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
     }));
   };
 
-  // Removed handleFornecedorCreated
+  const handleFornecedorCreated = async (novoFornecedor) => {
+    const updatedFornecedores = await base44.entities.Fornecedor.list();
+    setFornecedores(updatedFornecedores);
+    setFormData(prev => ({ ...prev, fornecedor_id: novoFornecedor.id }));
+  };
 
   const subcategoriasDisponiveis = formData.categoria_id
     ? subcategorias.filter(sub => sub.categoria_id === formData.categoria_id)
@@ -622,22 +626,33 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="fornecedor_id">Fornecedor</Label>
-                  <Select 
-                    value={formData.fornecedor_id || '__none__'} 
-                    onValueChange={(value) => handleChange('fornecedor_id', value === '__none__' ? '' : value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o fornecedor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">Nenhum</SelectItem>
-                      {fornecedores.map(fornecedor => (
-                        <SelectItem key={fornecedor.id} value={fornecedor.id}>
-                          {fornecedor.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select 
+                      value={formData.fornecedor_id || '__none__'} 
+                      onValueChange={(value) => handleChange('fornecedor_id', value === '__none__' ? '' : value)}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione o fornecedor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Nenhum</SelectItem>
+                        {fornecedores.map(fornecedor => (
+                          <SelectItem key={fornecedor.id} value={fornecedor.id}>
+                            {fornecedor.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => setModalFornecedor(true)}
+                      title="Criar novo fornecedor"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
@@ -708,7 +723,12 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
         onSuccess={handleEtapaCreated}
       />
 
-      {/* Removed CriacaoRapidaModal for Fornecedor */}
+      <CriacaoRapidaModal
+        tipo="fornecedor"
+        open={modalFornecedor}
+        onOpenChange={setModalFornecedor}
+        onSuccess={handleFornecedorCreated}
+      />
     </>
   );
 }
