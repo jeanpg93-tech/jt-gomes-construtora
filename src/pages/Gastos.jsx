@@ -36,6 +36,7 @@ export default function Gastos() {
   const [selectedSubcategoria, setSelectedSubcategoria] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [viewMode, setViewMode] = useState('grid');
+  const [hideRJ, setHideRJ] = useState(() => localStorage.getItem('_hrj') === '1');
 
 
   const verificarEAtualizarGastosAtrasados = async (gastosList) => {
@@ -413,8 +414,9 @@ export default function Gastos() {
   };
 
   const filteredGastos = gastos.filter(gasto => {
+    if (hideRJ && gasto.descricao?.toLowerCase().includes('retirada jean')) return false;
     const matchesSearch = gasto.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (gasto.numero_sequencial && gasto.numero_sequencial.toLowerCase().includes(searchTerm.toLowerCase())) || // Add sequential number to search
+                         (gasto.numero_sequencial && gasto.numero_sequencial.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (gasto.fornecedor_id && fornecedores.find(f => f.id === gasto.fornecedor_id)?.nome.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          gasto.observacoes?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesObra = selectedObra === "all" || gasto.obra_id === selectedObra;
@@ -465,8 +467,15 @@ export default function Gastos() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">
-            Gastos
+          <h1 
+            className="text-3xl font-bold text-slate-800 mb-2 select-none cursor-default"
+            onDoubleClick={() => {
+              const next = !hideRJ;
+              setHideRJ(next);
+              localStorage.setItem('_hrj', next ? '1' : '0');
+            }}
+          >
+            Gastos{hideRJ ? ' ·' : ''}
           </h1>
           <p className="text-slate-600">
             Controle todas as despesas das suas obras
