@@ -272,29 +272,165 @@ export default function Relatorios() {
 
       <div className="print-show" style={{ display: 'none' }}>
         {selectedObraIds.length > 0 && (
-          <div className="print-page">
+          <div className="print-content">
+            {/* Cabeçalho */}
             <div className="print-header">
-              <div className="print-logo-section">
-                {workspaceInfo.logoUrl && <img src={workspaceInfo.logoUrl} alt="Logo" className="print-logo" />}
-                <div className="print-company-info"><h1>{workspaceInfo.name}</h1>{workspaceInfo.cnpj && <p>CNPJ: {workspaceInfo.cnpj}</p>}<p>Gestão e Controle de Obras</p></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+                {workspaceInfo.logoUrl && (
+                  <img src={workspaceInfo.logoUrl} alt="Logo" style={{ height: '56px', width: 'auto', objectFit: 'contain' }} />
+                )}
+                <div>
+                  <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>{workspaceInfo.name}</h1>
+                  {workspaceInfo.cnpj && <p style={{ margin: '2px 0', fontSize: '11px', color: '#475569' }}>CNPJ: {workspaceInfo.cnpj}</p>}
+                  <p style={{ margin: '2px 0', fontSize: '11px', color: '#475569' }}>Gestão e Controle de Obras</p>
+                </div>
               </div>
-              <div className="print-report-info"><h2>Relatório Financeiro</h2><p><strong>Obras:</strong> {selectedObras.map(o => o.nome).join(', ')}</p><p><strong>Período:</strong> {dataInicio && dataFim ? `${format(new Date(`${dataInicio}T12:00:00`), 'dd/MM/yyyy')} a ${format(new Date(`${dataFim}T12:00:00`), 'dd/MM/yyyy')}` : 'Período completo'}</p><p><strong>Gerado:</strong> {format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p></div>
+              <div style={{ marginTop: '8px' }}>
+                <p className="print-info"><strong>Obras:</strong> {selectedObras.map(o => o.nome).join(', ')}</p>
+                <p className="print-info"><strong>Período:</strong> {dataInicio && dataFim ? `${format(new Date(`${dataInicio}T12:00:00`), 'dd/MM/yyyy')} a ${format(new Date(`${dataFim}T12:00:00`), 'dd/MM/yyyy')}` : 'Período completo'}</p>
+                <p className="print-info"><strong>Gerado em:</strong> {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+              </div>
             </div>
 
-            <div className="print-section"><h2>Filtros Aplicados</h2><table className="print-table"><tbody>{filtrosResumo.map((filtro) => <tr key={filtro.label}><td><strong>{filtro.label}</strong></td><td>{filtro.value}</td></tr>)}</tbody></table></div>
-
-            <div className="print-summary-cards">
-              <div className="print-summary-card negative"><h3>Gastos Pagos</h3><p>{formatCurrency(resumoFinanceiro.gastosPagos)}</p></div>
-              <div className="print-summary-card neutral"><h3>Gastos Pendentes</h3><p>{formatCurrency(resumoFinanceiro.gastosAPagar)}</p></div>
-              <div className="print-summary-card positive"><h3>Total Receitas</h3><p>{formatCurrency(resumoFinanceiro.totalReceitas)}</p></div>
-              <div className="print-summary-card"><h3>Terreno Pago</h3><p>{formatCurrency(resumoFinanceiro.totalTerrenoPago)}</p></div>
-              <div className="print-summary-card"><h3>Terreno Pendente</h3><p>{formatCurrency(resumoFinanceiro.totalTerrenoPendente)}</p></div>
-              <div className="print-summary-card positive"><h3>Lucro Estimado</h3><p>{formatCurrency(resumoFinanceiro.lucroEstimadoAtual)}</p></div>
+            {/* Cards de Resumo */}
+            <div className="print-section">
+              <h2>Resumo Financeiro</h2>
+              <table className="print-table">
+                <tbody>
+                  <tr>
+                    <td><strong>Gastos Pagos</strong></td>
+                    <td className="text-right text-red">{formatCurrency(resumoFinanceiro.gastosPagos)}</td>
+                    <td><strong>Gastos Pendentes</strong></td>
+                    <td className="text-right" style={{ color: '#f59e0b' }}>{formatCurrency(resumoFinanceiro.gastosAPagar)}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Total de Despesas</strong></td>
+                    <td className="text-right text-red">{formatCurrency(resumoFinanceiro.totalDespesas)}</td>
+                    <td><strong>Total de Receitas</strong></td>
+                    <td className="text-right text-green">{formatCurrency(resumoFinanceiro.totalReceitas)}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Terreno Pago</strong></td>
+                    <td className="text-right">{formatCurrency(resumoFinanceiro.totalTerrenoPago)}</td>
+                    <td><strong>Terreno Pendente</strong></td>
+                    <td className="text-right" style={{ color: '#f59e0b' }}>{formatCurrency(resumoFinanceiro.totalTerrenoPendente)}</td>
+                  </tr>
+                  <tr className="total-row">
+                    <td colSpan={2}><strong>Lucro Estimado (Venda Projetada - Despesas)</strong></td>
+                    <td colSpan={2} className={`text-right ${resumoFinanceiro.lucroEstimadoAtual >= 0 ? 'text-green' : 'text-red'}`} style={{ fontSize: '14px' }}>
+                      <strong>{formatCurrency(resumoFinanceiro.lucroEstimadoAtual)}</strong>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <div className="print-section"><h2>Distribuição de Gastos por Categoria</h2><div className="print-chart"><GraficoGastosPizza dados={graficoData} /></div><table className="print-table"><thead><tr><th>Categoria</th><th className="text-right">Pago</th><th className="text-right">Pendente</th><th className="text-right">Total</th><th className="text-right">%</th></tr></thead><tbody>{categoriaAnalytics.map((cat) => <tr key={cat.id}><td><strong>{cat.nome}</strong></td><td className="text-right">{formatCurrency(cat.pago)}</td><td className="text-right">{formatCurrency(cat.pendente)}</td><td className="text-right">{formatCurrency(cat.total)}</td><td className="text-right">{graficoData.find((item) => item.name === cat.nome)?.percentual.toFixed(1)}%</td></tr>)}</tbody></table></div>
+            {/* Filtros Aplicados */}
+            <div className="print-section">
+              <h2>Filtros Aplicados</h2>
+              <table className="print-table">
+                <tbody>
+                  {filtrosResumo.map((filtro) => (
+                    <tr key={filtro.label}>
+                      <td style={{ width: '30%' }}><strong>{filtro.label}</strong></td>
+                      <td>{filtro.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-            <div className="print-footer"><p>Relatório gerado por {workspaceInfo.name} em {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p></div>
+            {/* Gráfico e Distribuição por Categoria */}
+            <div className="print-section">
+              <h2>Distribuição de Gastos por Categoria</h2>
+              {graficoData.filter(d => d.value > 0).length > 0 && (
+                <div className="print-chart-container">
+                  <GraficoGastosPizza dados={graficoData} />
+                </div>
+              )}
+              <table className="print-table">
+                <thead>
+                  <tr>
+                    <th>Categoria</th>
+                    <th className="text-right">Pago</th>
+                    <th className="text-right">Pendente</th>
+                    <th className="text-right">Total</th>
+                    <th className="text-right">%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categoriaAnalytics.map((cat) => (
+                    <React.Fragment key={cat.id}>
+                      <tr>
+                        <td><strong>{cat.nome}</strong></td>
+                        <td className="text-right text-red">{formatCurrency(cat.pago)}</td>
+                        <td className="text-right" style={{ color: '#f59e0b' }}>{formatCurrency(cat.pendente)}</td>
+                        <td className="text-right"><strong>{formatCurrency(cat.total)}</strong></td>
+                        <td className="text-right">{graficoData.find(i => i.name === cat.nome)?.percentual.toFixed(1)}%</td>
+                      </tr>
+                      {cat.subcategorias?.map(sub => (
+                        <tr key={sub.id} style={{ backgroundColor: '#f8fafc' }}>
+                          <td style={{ paddingLeft: '24px', color: '#64748b' }}>↳ {sub.nome}</td>
+                          <td className="text-right" style={{ color: '#64748b' }}>{formatCurrency(sub.pago)}</td>
+                          <td className="text-right" style={{ color: '#64748b' }}>{formatCurrency(sub.pendente)}</td>
+                          <td className="text-right" style={{ color: '#64748b' }}>{formatCurrency(sub.total)}</td>
+                          <td className="text-right" style={{ color: '#64748b' }}></td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                  <tr className="total-row">
+                    <td><strong>TOTAL GERAL</strong></td>
+                    <td className="text-right text-red"><strong>{formatCurrency(resumoFinanceiro.gastosPagos)}</strong></td>
+                    <td className="text-right" style={{ color: '#f59e0b' }}><strong>{formatCurrency(resumoFinanceiro.gastosAPagar)}</strong></td>
+                    <td className="text-right"><strong>{formatCurrency(resumoFinanceiro.totalDespesas)}</strong></td>
+                    <td className="text-right"><strong>100%</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Detalhamento dos gastos por categoria */}
+            {categoriaAnalytics.map((cat) => {
+              const gastosCategoria = gastosFiltrados.filter(g => g.categoria_id === cat.id);
+              if (!gastosCategoria.length) return null;
+              return (
+                <div className="print-section" key={cat.id}>
+                  <h2>Detalhamento — {cat.nome}</h2>
+                  <table className="print-table">
+                    <thead>
+                      <tr>
+                        <th>Descrição</th>
+                        <th>Data</th>
+                        <th>Fornecedor</th>
+                        <th className="text-right">Valor</th>
+                        <th className="text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {gastosCategoria.map(g => {
+                        const forn = fornecedores.find(f => f.id === g.fornecedor_id);
+                        const statusClass = g.status_pagamento === 'pago' ? 'status-pago' : g.status_pagamento === 'atrasado' ? 'status-atrasado' : g.status_pagamento === 'programado' ? 'status-programado' : 'status-pendente';
+                        const statusLabel = { pago: 'Pago', pendente: 'Pendente', programado: 'Programado', atrasado: 'Atrasado' }[g.status_pagamento] || g.status_pagamento;
+                        return (
+                          <tr key={g.id}>
+                            <td>{g.descricao}</td>
+                            <td>{g.data ? format(new Date(`${g.data}T12:00:00`), 'dd/MM/yyyy') : '-'}</td>
+                            <td>{forn?.nome || '-'}</td>
+                            <td className="text-right">{formatCurrency(g.valor)}</td>
+                            <td className={`text-center ${statusClass}`}>{statusLabel}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+
+            <div style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '12px', textAlign: 'center' }}>
+              <p className="print-info">Relatório gerado por {workspaceInfo.name} em {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+            </div>
           </div>
         )}
       </div>

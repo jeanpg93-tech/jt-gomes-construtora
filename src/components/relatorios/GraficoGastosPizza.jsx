@@ -19,15 +19,25 @@ function CustomTooltip({ active, payload }) {
 }
 
 export default function GraficoGastosPizza({ dados = [] }) {
-  if (!dados.length) {
+  const dadosFiltrados = dados.filter(d => d.value > 0);
+
+  if (!dadosFiltrados.length) {
     return <div className="flex h-full items-center justify-center text-gray-500">Sem dados para exibir o gráfico.</div>;
   }
 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
-        <Pie data={dados} dataKey="value" nameKey="name" cx="42%" cy="50%" outerRadius="78%" paddingAngle={3}>
-          {dados.map((entry, index) => (
+        <Pie
+          data={dadosFiltrados}
+          dataKey="value"
+          nameKey="name"
+          cx="42%"
+          cy="50%"
+          outerRadius="78%"
+          paddingAngle={dadosFiltrados.length > 1 ? 1 : 0}
+        >
+          {dadosFiltrados.map((entry, index) => (
             <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
@@ -37,7 +47,7 @@ export default function GraficoGastosPizza({ dados = [] }) {
           verticalAlign="middle"
           align="right"
           iconSize={10}
-          formatter={(value, entry, index) => `${value} (${dados[index]?.percentual.toFixed(1)}%)`}
+          formatter={(value, entry, index) => `${value} (${dadosFiltrados[index]?.percentual.toFixed(1)}%)`}
           wrapperStyle={{ fontSize: '12px', lineHeight: '20px', maxWidth: '220px' }}
         />
       </PieChart>
