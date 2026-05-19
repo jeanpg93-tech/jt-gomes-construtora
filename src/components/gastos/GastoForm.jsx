@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, Save, Calendar as CalendarIcon, Plus } from "lucide-react";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 import { base44 } from "@/api/base44Client";
 
 import CriacaoRapidaModal from "./CriacaoRapidaModal";
@@ -346,39 +347,24 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="obra_id">Obra *</Label>
-                  <Select 
-                    value={formData.obra_id} 
+                  <SearchableSelect
+                    value={formData.obra_id}
                     onValueChange={(value) => handleChange('obra_id', value)}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a obra" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {obras.filter(o => o.ativa !== false).map(obra => (
-                        <SelectItem key={obra.id} value={obra.id}>{obra.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    options={obras.filter(o => o.ativa !== false).map(o => ({ value: o.id, label: o.nome }))}
+                    placeholder="Selecione a obra"
+                  />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="categoria_id">Categoria *</Label>
                   <div className="flex gap-2">
-                    <Select 
-                      value={formData.categoria_id} 
+                    <SearchableSelect
+                      value={formData.categoria_id}
                       onValueChange={(value) => handleChange('categoria_id', value)}
-                      required
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Selecione a categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categorias.map(cat => (
-                          <SelectItem key={cat.id} value={cat.id}>{cat.nome}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      options={categorias.map(c => ({ value: c.id, label: c.nome }))}
+                      placeholder="Selecione a categoria"
+                      className="flex-1"
+                    />
                     <Button 
                       type="button" 
                       variant="outline" 
@@ -396,20 +382,15 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                 <div className="space-y-2">
                   <Label htmlFor="subcategoria_id">Tipo de {categorias.find(c => c.id === formData.categoria_id)?.nome}</Label>
                   <div className="flex gap-2">
-                    <Select 
-                      value={formData.subcategoria_id || '__none__'} 
-                      onValueChange={(value) => handleChange('subcategoria_id', value === '__none__' ? '' : value)}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Selecione o tipo (opcional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">Nenhum</SelectItem>
-                        {subcategoriasDisponiveis.map(sub => (
-                          <SelectItem key={sub.id} value={sub.id}>{sub.nome}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      value={formData.subcategoria_id}
+                      onValueChange={(value) => handleChange('subcategoria_id', value)}
+                      options={subcategoriasDisponiveis.map(s => ({ value: s.id, label: s.nome }))}
+                      placeholder="Selecione o tipo (opcional)"
+                      allowNone
+                      noneLabel="Nenhum"
+                      className="flex-1"
+                    />
                     <Button 
                       type="button" 
                       variant="outline" 
@@ -627,22 +608,15 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
                 <div className="space-y-2">
                   <Label htmlFor="fornecedor_id">Fornecedor</Label>
                   <div className="flex gap-2">
-                    <Select 
-                      value={formData.fornecedor_id || '__none__'} 
-                      onValueChange={(value) => handleChange('fornecedor_id', value === '__none__' ? '' : value)}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Selecione o fornecedor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">Nenhum</SelectItem>
-                        {fornecedores.map(fornecedor => (
-                          <SelectItem key={fornecedor.id} value={fornecedor.id}>
-                            {fornecedor.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      value={formData.fornecedor_id}
+                      onValueChange={(value) => handleChange('fornecedor_id', value)}
+                      options={fornecedores.map(f => ({ value: f.id, label: f.nome }))}
+                      placeholder="Selecione o fornecedor"
+                      allowNone
+                      noneLabel="Nenhum"
+                      className="flex-1"
+                    />
                     <Button 
                       type="button" 
                       variant="outline" 
