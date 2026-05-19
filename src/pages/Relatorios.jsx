@@ -415,7 +415,7 @@ export default function Relatorios() {
                         return (
                           <tr key={g.id}>
                             <td>{g.descricao}</td>
-                            <td>{g.data ? format(new Date(`${g.data}T12:00:00`), 'dd/MM/yyyy') : '-'}</td>
+                            <td>{g.data ? (() => { try { return format(new Date(`${String(g.data).slice(0,10)}T12:00:00`), 'dd/MM/yyyy'); } catch { return '-'; } })() : '-'}</td>
                             <td>{forn?.nome || '-'}</td>
                             <td className="text-right">{formatCurrency(g.valor)}</td>
                             <td className={`text-center ${statusClass}`}>{statusLabel}</td>
