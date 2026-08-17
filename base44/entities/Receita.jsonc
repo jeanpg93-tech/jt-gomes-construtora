@@ -1,0 +1,90 @@
+{
+  "name": "Receita",
+  "type": "object",
+  "properties": {
+    "obra_id": {
+      "type": "string",
+      "description": "ID da obra relacionada"
+    },
+    "descricao": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o da receita"
+    },
+    "categoria_id": {
+      "type": "string",
+      "description": "ID da categoria de receita"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "venda",
+        "sinal",
+        "parcela",
+        "financiamento",
+        "aluguel",
+        "outros"
+      ],
+      "description": "Tipo de receita"
+    },
+    "valor": {
+      "type": "number",
+      "description": "Valor da receita"
+    },
+    "data": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da receita"
+    },
+    "data_vencimento": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de vencimento (se aplic\u00e1vel)"
+    },
+    "cliente": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "forma_pagamento": {
+      "type": "string",
+      "enum": [
+        "dinheiro",
+        "cartao",
+        "transferencia",
+        "boleto",
+        "financiamento",
+        "pix"
+      ],
+      "description": "Forma de pagamento"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "prevista",
+        "recebida",
+        "atrasada"
+      ],
+      "default": "prevista",
+      "description": "Status da receita"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre a receita"
+    },
+    "origem_registro": {
+      "type": "string",
+      "enum": [
+        "web",
+        "whatsapp"
+      ],
+      "default": "web",
+      "description": "Canal por onde o registro foi criado (web app ou WhatsApp)"
+    }
+  },
+  "required": [
+    "obra_id",
+    "descricao",
+    "tipo",
+    "valor",
+    "data"
+  ]
+}

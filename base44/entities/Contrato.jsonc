@@ -1,0 +1,99 @@
+{
+  "name": "Contrato",
+  "type": "object",
+  "properties": {
+    "tipo_contrato": {
+      "type": "string",
+      "description": "Tipo de contrato (ex: construcao_civil)"
+    },
+    "tipo_contrato_outro": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o do tipo de contrato quando 'outro'"
+    },
+    "descricao_servicos": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o detalhada dos servi\u00e7os"
+    },
+    "obra_id": {
+      "type": "string",
+      "description": "ID da obra relacionada"
+    },
+    "obra_nome": {
+      "type": "string",
+      "description": "Nome da obra"
+    },
+    "obra_endereco": {
+      "type": "string",
+      "description": "Endere\u00e7o da obra"
+    },
+    "area_total": {
+      "type": "string",
+      "description": "\u00c1rea total em m\u00b2"
+    },
+    "valor_total": {
+      "type": "number",
+      "description": "Valor total do contrato"
+    },
+    "valor_m2": {
+      "type": "number",
+      "description": "Valor por metro quadrado"
+    },
+    "forma_pagamento": {
+      "type": "string",
+      "description": "Forma de pagamento acordada"
+    },
+    "data_inicio": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de in\u00edcio do contrato"
+    },
+    "prazo_quantidade": {
+      "type": "string",
+      "description": "Quantidade do prazo"
+    },
+    "prazo_unidade": {
+      "type": "string",
+      "enum": [
+        "dias",
+        "meses"
+      ],
+      "description": "Unidade do prazo"
+    },
+    "data_termino": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de t\u00e9rmino do contrato"
+    },
+    "data_assinatura": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de assinatura do contrato"
+    },
+    "contratados_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs dos fornecedores contratados"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "concluido",
+        "cancelado"
+      ],
+      "default": "ativo",
+      "description": "Status do contrato"
+    },
+    "arquivo_assinado": {
+      "type": "string",
+      "description": "URL do arquivo PDF do contrato assinado"
+    }
+  },
+  "required": [
+    "tipo_contrato",
+    "descricao_servicos",
+    "data_assinatura"
+  ]
+}

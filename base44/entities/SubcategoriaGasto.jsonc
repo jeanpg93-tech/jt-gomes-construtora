@@ -1,0 +1,26 @@
+{
+  "name": "SubcategoriaGasto",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome da subcategoria de gasto"
+    },
+    "categoria_id": {
+      "type": "string",
+      "description": "ID da categoria pai"
+    }
+  },
+  "required": [
+    "nome",
+    "categoria_id"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

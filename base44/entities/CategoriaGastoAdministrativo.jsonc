@@ -1,0 +1,21 @@
+{
+  "name": "CategoriaGastoAdministrativo",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome da categoria de gasto administrativo"
+    }
+  },
+  "required": [
+    "nome"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

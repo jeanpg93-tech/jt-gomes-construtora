@@ -1,0 +1,50 @@
+{
+  "name": "Material",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome do material/produto"
+    },
+    "unidade_medida": {
+      "type": "string",
+      "enum": [
+        "un",
+        "kg",
+        "m",
+        "m2",
+        "m3",
+        "sc",
+        "cx",
+        "pc",
+        "lt"
+      ],
+      "description": "Unidade de medida (un=unidade, kg=quilograma, m=metro, m2=metro quadrado, m3=metro c\u00fabico, sc=saco, cx=caixa, pc=pe\u00e7a, lt=litro)"
+    },
+    "subcategoria_gasto_id": {
+      "type": "string",
+      "description": "Subcategoria 1 do material (ex: Madeira, Argamassa)"
+    },
+    "custo_medio": {
+      "type": "number",
+      "description": "Custo m\u00e9dio estimado por unidade (opcional)"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre o material"
+    }
+  },
+  "required": [
+    "nome",
+    "unidade_medida",
+    "subcategoria_gasto_id"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

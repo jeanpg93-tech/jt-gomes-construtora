@@ -1,0 +1,39 @@
+{
+  "name": "Recibo",
+  "type": "object",
+  "properties": {
+    "fornecedor_id": {
+      "type": "string",
+      "description": "ID do fornecedor/benefici\u00e1rio"
+    },
+    "valor": {
+      "type": "number",
+      "description": "Valor pago"
+    },
+    "data_pagamento": {
+      "type": "string",
+      "format": "date",
+      "description": "Data do pagamento"
+    },
+    "forma_pagamento": {
+      "type": "string",
+      "description": "Forma de pagamento utilizada"
+    },
+    "referencia_pagamento": {
+      "type": "string",
+      "description": "Refer\u00eancia/motivo do pagamento"
+    },
+    "data_emissao": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de emiss\u00e3o do recibo"
+    }
+  },
+  "required": [
+    "fornecedor_id",
+    "valor",
+    "data_pagamento",
+    "forma_pagamento",
+    "referencia_pagamento"
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "name": "Obra",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome da obra"
+    },
+    "endereco": {
+      "type": "string",
+      "description": "Endere\u00e7o da obra"
+    },
+    "foto_url": {
+      "type": "string",
+      "description": "URL da foto de refer\u00eancia da obra"
+    },
+    "area_construida": {
+      "type": "number",
+      "description": "\u00c1rea constru\u00edda em m\u00b2"
+    },
+    "area_terreno": {
+      "type": "number",
+      "description": "\u00c1rea do terreno em m\u00b2"
+    },
+    "data_inicio": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de in\u00edcio da obra"
+    },
+    "data_previsao_entrega": {
+      "type": "string",
+      "format": "date",
+      "description": "Data prevista para entrega"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planejamento",
+        "em_andamento",
+        "finalizada",
+        "vendida"
+      ],
+      "default": "planejamento",
+      "description": "Status atual da obra"
+    },
+    "ativa": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se a obra est\u00e1 ativa para aparecer em filtros"
+    },
+    "valor_terreno": {
+      "type": "number",
+      "description": "Valor/custo do terreno"
+    },
+    "valor_mao_obra_m2": {
+      "type": "number",
+      "description": "Valor da m\u00e3o de obra por metro quadrado"
+    },
+    "previsao_gastos_materiais": {
+      "type": "number",
+      "description": "Previs\u00e3o de gastos com materiais"
+    },
+    "valor_venda_projetado": {
+      "type": "number",
+      "description": "Valor de venda projetado (bruto)"
+    },
+    "imposto_percentual": {
+      "type": "number",
+      "description": "Percentual de imposto sobre venda (ex: 5 para 5%)"
+    },
+    "comissao_percentual": {
+      "type": "number",
+      "description": "Percentual de comiss\u00e3o sobre venda (ex: 3 para 3%)"
+    },
+    "valor_venda_real": {
+      "type": "number",
+      "description": "Valor de venda realizado (ap\u00f3s descontos)"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre a obra"
+    }
+  },
+  "required": [
+    "nome",
+    "endereco"
+  ]
+}

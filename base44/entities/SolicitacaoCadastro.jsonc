@@ -1,0 +1,125 @@
+{
+  "name": "SolicitacaoCadastro",
+  "type": "object",
+  "properties": {
+    "nome_completo": {
+      "type": "string",
+      "description": "Nome completo do solicitante"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email do solicitante"
+    },
+    "telefone": {
+      "type": "string",
+      "description": "Telefone do solicitante"
+    },
+    "cargo_funcao": {
+      "type": "string",
+      "description": "Cargo ou fun\u00e7\u00e3o que desempenhar\u00e1"
+    },
+    "motivo_acesso": {
+      "type": "string",
+      "description": "Motivo pelo qual precisa de acesso"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "aprovado",
+        "negado"
+      ],
+      "default": "pendente",
+      "description": "Status da solicita\u00e7\u00e3o"
+    },
+    "data_aprovacao": {
+      "type": "string",
+      "format": "date",
+      "description": "Data em que foi aprovado/negado"
+    },
+    "aprovado_por": {
+      "type": "string",
+      "description": "Email do administrador que aprovou/negou"
+    },
+    "motivo_negacao": {
+      "type": "string",
+      "description": "Motivo da nega\u00e7\u00e3o (se aplic\u00e1vel)"
+    },
+    "permissoes_obras": {
+      "type": "string",
+      "enum": [
+        "nenhuma",
+        "leitura",
+        "edicao",
+        "total"
+      ],
+      "default": "leitura"
+    },
+    "permissoes_gastos": {
+      "type": "string",
+      "enum": [
+        "nenhuma",
+        "leitura",
+        "edicao",
+        "total"
+      ],
+      "default": "leitura"
+    },
+    "permissoes_receitas": {
+      "type": "string",
+      "enum": [
+        "nenhuma",
+        "leitura",
+        "edicao",
+        "total"
+      ],
+      "default": "leitura"
+    },
+    "permissoes_relatorios": {
+      "type": "string",
+      "enum": [
+        "nenhuma",
+        "leitura",
+        "leitura_ocultar_valores"
+      ],
+      "default": "leitura"
+    },
+    "permissoes_fornecedores": {
+      "type": "string",
+      "enum": [
+        "nenhuma",
+        "leitura",
+        "edicao",
+        "total"
+      ],
+      "default": "leitura"
+    },
+    "permissoes_contratos": {
+      "type": "string",
+      "enum": [
+        "nenhuma",
+        "leitura",
+        "edicao",
+        "total"
+      ],
+      "default": "leitura"
+    },
+    "permissoes_configuracoes": {
+      "type": "string",
+      "enum": [
+        "nenhuma",
+        "leitura",
+        "edicao"
+      ],
+      "default": "nenhuma"
+    }
+  },
+  "required": [
+    "nome_completo",
+    "email"
+  ],
+  "rls": {
+    "read": {},
+    "write": {}
+  }
+}

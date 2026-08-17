@@ -1,0 +1,202 @@
+{
+  "name": "Fornecedor",
+  "type": "object",
+  "properties": {
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "fisica",
+        "juridica"
+      ],
+      "description": "Tipo de pessoa (f\u00edsica ou jur\u00eddica)"
+    },
+    "nome": {
+      "type": "string",
+      "description": "Nome completo ou raz\u00e3o social"
+    },
+    "nome_fantasia": {
+      "type": "string",
+      "description": "Nome fantasia (apenas para pessoa jur\u00eddica)"
+    },
+    "cpf_cnpj": {
+      "type": "string",
+      "description": "CPF ou CNPJ"
+    },
+    "rg": {
+      "type": "string",
+      "description": "RG (apenas para pessoa f\u00edsica)"
+    },
+    "data_nascimento": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de nascimento (pessoa f\u00edsica)"
+    },
+    "estado_civil": {
+      "type": "string",
+      "enum": [
+        "solteiro",
+        "casado",
+        "divorciado",
+        "viuvo",
+        "uniao_estavel"
+      ],
+      "description": "Estado civil"
+    },
+    "profissao": {
+      "type": "string",
+      "description": "Profiss\u00e3o"
+    },
+    "naturalidade": {
+      "type": "string",
+      "description": "Cidade/estado de nascimento"
+    },
+    "cep": {
+      "type": "string",
+      "description": "CEP"
+    },
+    "logradouro": {
+      "type": "string",
+      "description": "Logradouro"
+    },
+    "numero": {
+      "type": "string",
+      "description": "N\u00famero"
+    },
+    "complemento": {
+      "type": "string",
+      "description": "Complemento"
+    },
+    "bairro": {
+      "type": "string",
+      "description": "Bairro"
+    },
+    "cidade": {
+      "type": "string",
+      "description": "Cidade"
+    },
+    "estado": {
+      "type": "string",
+      "description": "Estado (UF)"
+    },
+    "endereco_completo": {
+      "type": "string",
+      "description": "Endere\u00e7o completo formatado"
+    },
+    "representante_nome": {
+      "type": "string",
+      "description": "Nome do representante legal (PJ)"
+    },
+    "representante_cpf": {
+      "type": "string",
+      "description": "CPF do representante"
+    },
+    "representante_rg": {
+      "type": "string",
+      "description": "RG do representante"
+    },
+    "representante_data_nascimento": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de nascimento do representante"
+    },
+    "representante_estado_civil": {
+      "type": "string",
+      "enum": [
+        "solteiro",
+        "casado",
+        "divorciado",
+        "viuvo",
+        "uniao_estavel"
+      ],
+      "description": "Estado civil do representante"
+    },
+    "representante_profissao": {
+      "type": "string",
+      "description": "Profiss\u00e3o do representante"
+    },
+    "representante_naturalidade": {
+      "type": "string",
+      "description": "Naturalidade do representante"
+    },
+    "representante_mesmo_endereco": {
+      "type": "boolean",
+      "description": "Se o representante reside no mesmo endere\u00e7o"
+    },
+    "representante_cep": {
+      "type": "string",
+      "description": "CEP do representante"
+    },
+    "representante_logradouro": {
+      "type": "string",
+      "description": "Logradouro do representante"
+    },
+    "representante_numero": {
+      "type": "string",
+      "description": "N\u00famero do representante"
+    },
+    "representante_complemento": {
+      "type": "string",
+      "description": "Complemento do representante"
+    },
+    "representante_bairro": {
+      "type": "string",
+      "description": "Bairro do representante"
+    },
+    "representante_cidade": {
+      "type": "string",
+      "description": "Cidade do representante"
+    },
+    "representante_estado": {
+      "type": "string",
+      "description": "Estado do representante"
+    },
+    "representante_endereco_completo": {
+      "type": "string",
+      "description": "Endere\u00e7o completo do representante"
+    },
+    "banco": {
+      "type": "string",
+      "description": "Nome do banco"
+    },
+    "agencia": {
+      "type": "string",
+      "description": "Ag\u00eancia banc\u00e1ria"
+    },
+    "conta_corrente": {
+      "type": "string",
+      "description": "Conta corrente"
+    },
+    "titular_conta": {
+      "type": "string",
+      "description": "Titular da conta"
+    },
+    "cpf_cnpj_titular": {
+      "type": "string",
+      "description": "CPF/CNPJ do titular"
+    },
+    "pix": {
+      "type": "string",
+      "description": "Chave PIX"
+    },
+    "telefone": {
+      "type": "string",
+      "description": "Telefone"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es"
+    },
+    "contato": {
+      "type": "string",
+      "description": "Contato resumido (retrocompatibilidade)"
+    }
+  },
+  "required": [
+    "tipo",
+    "nome"
+  ]
+}

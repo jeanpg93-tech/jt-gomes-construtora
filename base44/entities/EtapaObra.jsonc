@@ -1,0 +1,29 @@
+{
+  "name": "EtapaObra",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome da etapa da obra (ex: Funda\u00e7\u00e3o, 1\u00aa Laje, Reboco)"
+    },
+    "ordem": {
+      "type": "number",
+      "description": "Ordem sequencial da etapa (para ordena\u00e7\u00e3o)"
+    },
+    "descricao": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o detalhada da etapa"
+    }
+  },
+  "required": [
+    "nome"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

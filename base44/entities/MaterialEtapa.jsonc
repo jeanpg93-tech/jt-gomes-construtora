@@ -1,0 +1,26 @@
+{
+  "name": "MaterialEtapa",
+  "type": "object",
+  "properties": {
+    "material_id": {
+      "type": "string",
+      "description": "ID do material"
+    },
+    "etapa_obra_id": {
+      "type": "string",
+      "description": "ID da etapa da obra"
+    }
+  },
+  "required": [
+    "material_id",
+    "etapa_obra_id"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
