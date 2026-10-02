@@ -2,6 +2,8 @@
 
 Atualizado em 02/10/2026. Este documento orienta a execução e registra o que já foi comprovado. Etapas dependentes de acesso externo permanecem pendentes até que haja evidência de conclusão.
 
+**Entrega para revisão:** [PR #1, em rascunho](https://github.com/jeanpg93-tech/jt-gomes-construtora/pull/1), branch `codex/migracao-supabase-completa`. Código preparado e ensaio local aprovados; main continua preservada. A carga não foi aplicada no Supabase remoto e o frontend ainda não foi transferido para Lovable.
+
 ## Objetivo e decisões confirmadas
 
 Migrar o sistema do Base44 para Lovable, reaproveitando as telas e os cálculos existentes, com banco, autenticação e arquivos em um projeto Supabase externo da conta **Kalel**, organização `ndflqyfhnwhjqbhmwnxy`, plano **Free**. Região proposta: São Paulo (`sa-east-1`).
@@ -47,18 +49,13 @@ O pacote de 26/09/2026 contém apenas oito entidades. Uma nova leitura em 02/10/
 | Usuários/configurações | 2 | Ausentes | Recriar Auth; mapear perfis por email confirmado |
 | Receitas, categorias de receita, subcategorias 2, materiais, materiais/etapas, solicitações | 0 | Algumas vazias; outras ausentes | Conferir que continuam vazias; manter estrutura |
 
-Totais conferidos com precisão decimal:
-
-- Gastos de obras: **R$ 1.932.049,27**; Ipanema II **R$ 1.255.571,16** e Guilhermina **R$ 676.478,11**.
-- Gastos administrativos: **R$ 9.408,10**.
-- Valores das parcelas exportadas: **R$ 601.106,33**. Esse valor inclui registros pendentes de conciliação e não deve ser somado automaticamente ao total de gastos.
-- Recibo exportado: **R$ 50.000,00**. O recibo também não representa um gasto adicional sem conciliação.
+Totais conferidos com precisão decimal e registrados nos relatórios privados de auditoria e ensaio em `/workspace/cloud-setup/jt-gomes-construtora/`. Parcelas e recibos não devem ser somados automaticamente ao total de gastos. O relatório distingue valores de origem, operacionais e pendentes de conciliação.
 
 Há diferenças em campos exportados de oito gastos e uma categoria entre o pacote antigo e a origem, mesmo com IDs e totais iguais. A diferença não comprova lançamento novo depois de 26/09. Comparar e registrar qual versão de cada campo será usada; não assumir equivalência completa com base no total financeiro.
 
 ## Etapa 1 — Preservação, inventário e conciliação
 
-**Estado:** inventário e cópia privada preparados; conciliação pendente.
+**Estado:** inventário e cópia privada completos; ensaio preserva todos os campos dos 468 registros. Conciliação das 11 parcelas pendente; os 26 fornecedores incompletos são aceitos sem classificação automática e sinalizados no formulário.
 
 1. Preservar o checkout modificado, o pacote original e um patch recuperável. Não reinstalar um checkout sobre as alterações locais.
 2. Guardar a exportação atual separadamente, com ID da origem, data, contagens e SHA-256 de cada arquivo. A cópia atual fica fora do repositório, em `/workspace/cloud-setup/jt-gomes-construtora/source-snapshot-20261002/`.
@@ -71,11 +68,11 @@ Há diferenças em campos exportados de oito gastos e uma categoria entre o paco
 
 ## Etapa 2 — Supabase externo e banco completo
 
-**Estado:** organização Free acessível; projeto ainda não criado.
+**Estado:** organização Free acessível; projeto ainda não criado. Importador completo implementado e validado localmente.
 
 1. Criar `jt-gomes-construtora` na organização Kalel, região São Paulo, mantendo o plano Free. Verificar capacidade e limites; não contratar plano ou recurso pago para contornar um bloqueio.
 2. Revisar a migração preparada com 19 tabelas, índices, referências, políticas de acesso e bucket privado `documentos`. Aplicar a versão revisada uma única vez num banco vazio; `schema.sql` e a migration atual representam a mesma mudança e não devem ser executados em duplicidade.
-3. Atualizar o importador: o script atual cobre somente o pacote antigo. A versão completa deve validar o manifesto da nova exportação, importar pais antes dos filhos, preservar IDs e precisão decimal, detectar conflitos e executar a carga numa transação. Perfis Auth são tratados separadamente.
+3. Usar `import_snapshot.py` para a exportação completa: valida o manifesto, importa pais antes dos filhos, preserva IDs e precisão decimal, detecta conflitos e executa a carga numa transação. O script `import_data.py` cobre apenas o pacote antigo. A versão completa bloqueia vínculos inválidos por padrão; `--allow-reconciliation` permite somente ensaio com preservação dos registros pendentes no arquivo privado. Perfis Auth são tratados separadamente.
 4. Preservar campos Base44 não operacionais em arquivo de auditoria privado; não descartar campos sem informar o motivo. Datas de criação e atualização não devem mudar silenciosamente durante a carga.
 5. Importar e conferir registros por tabela, conjuntos de IDs, campos relevantes, totais por obra, categorias e status de pagamento, gastos administrativos e parcelas. Testar repetição compatível e cancelamento integral em conflito.
 6. Rodar os advisors de segurança/performance e consultas de verificação no banco real. Registrar resultados e limitações.
@@ -98,7 +95,7 @@ Há diferenças em campos exportados de oito gastos e uma categoria entre o paco
 
 ## Etapa 4 — Transferência do código para GitHub/Lovable
 
-**Estado:** projeto Lovable criado para preparação; frontend existente ainda não transferido.
+**Estado:** projeto Lovable criado para preparação; código de origem preservado em branch e PR de rascunho. Conexão GitHub pela interface e transferência do frontend pendentes.
 
 1. Confirmar o fluxo suportado pelo projeto Lovable para receber o frontend existente. Não presumir importação automática de um repositório pelo recurso Connect GitHub.
 2. Conectar o projeto Lovable ao GitHub usando a conta correta. Se o Lovable criar um repositório próprio, copiar o código revisado para esse destino em uma branch e PR, preservando os arquivos de configuração requeridos pela plataforma.
@@ -162,7 +159,7 @@ O agente executa preparação de código, auditorias, SQL, importação autoriza
 
 ## Evidências e bloqueios desta execução
 
-- Build Vite aprovado novamente em 02/10/2026; 15 testes locais aprovados. A primeira execução dos testes nesta sessão encontrou restrição Node → Python; a repetição autorizada concluiu sem falha.
+- Build Vite aprovado novamente em 02/10/2026; 19 testes locais aprovados, incluindo importação completa com fixtures sintéticas. A primeira execução dos testes nesta sessão encontrou restrição Node → Python; a repetição autorizada concluiu sem falha.
 - Backup antigo validado; nova exportação privada de 19 entidades preservada com manifesto e hashes. Auditoria inicial em `/workspace/cloud-setup/jt-gomes-construtora/snapshot-audit.json`.
 - Organização Kalel confirmada no plano Free; nenhum projeto encontrado.
 - A consulta de custo exigida para criação automática retorna `MCP tool get_cost was not returned by tools/list`. Foi solicitada criação pelo painel do Supabase como alternativa. Não foram inventados ID de confirmação ou custos para acionar a criação.
@@ -170,13 +167,13 @@ O agente executa preparação de código, auditorias, SQL, importação autoriza
 - Projeto Lovable **J&T Gomes Builder** criado e confirmado como pronto para preparação, sem publicação. A resposta técnica confirmou o fluxo de repositório novo via Connect GitHub; foram conferidos o template e o `AGENTS.md` pelos arquivos do projeto. A conexão GitHub pela interface foi solicitada ao usuário. Visibilidade `workspace_edit`; tentativa de alterar para `private` retornou 422. Nenhum backup foi enviado ao Lovable.
 - Lint/typecheck têm problemas preexistentes e continuam pendentes; não foram desativados para declarar sucesso.
 
-Próximas ações concretas: concluir a revisão das parcelas/fornecedores; obter o projeto Supabase externo; finalizar o fluxo de transferência indicado pelo Lovable; implementar e validar a carga completa numa base de ensaio antes da liberação.
+Próximas ações concretas: obter o projeto Supabase externo; conectar GitHub pelo projeto Lovable; resolver o escopo de acesso e as parcelas pendentes; adaptar o frontend e validar o banco no serviço real antes da liberação.
 
 ## Continuação: ensaio da carga completa
 
 O novo `import_snapshot.py` verifica os hashes e as 19 entidades, importa pais antes dos filhos, preserva todos os campos da origem em `migration_private` e prepara SQL transacional com verificação de conflitos. O arquivo privado tem RLS e acesso revogado aos papéis `anon` e `authenticated`, inclusive para administradores da aplicação. Nenhum perfil Base44 é convertido automaticamente em usuário Auth ou privilégio ativo.
 
-O ensaio com a exportação completa preservou os **468 registros** e colocou **455 registros** nas tabelas operacionais. As **11 parcelas sem vínculo** permanecem no arquivo privado para conciliação; os **2 perfis** permanecem pendentes da recriação de identidade. Das 41 parcelas, 30 possuem vínculo válido. O total operacional das parcelas é R$ 325.306,33 e os R$ 275.800,00 restantes estão pendentes de conciliação; não foram apagados ou somados a outros módulos.
+O ensaio com a exportação completa preservou os **468 registros** e colocou **455 registros** nas tabelas operacionais. As **11 parcelas sem vínculo** permanecem no arquivo privado para conciliação; os **2 perfis** permanecem pendentes da recriação de identidade. Das 41 parcelas, 30 possuem vínculo válido. Os totais operacionais e pendentes estão no relatório privado; os registros não foram apagados ou somados a outros módulos.
 
 Os 51 fornecedores entram com seus dados existentes. Os 26 sem tipo mantêm `tipo = NULL`, com aviso no cadastro e seleção explícita ao editar o formulário completo. Campos vazios de data/enumeração/referência são normalizados para NULL no destino, mantendo o valor original no arquivo privado e registrando as contagens dessas normalizações no relatório.
 

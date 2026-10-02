@@ -2,13 +2,19 @@
 
 ## Retomada em 02/10/2026
 
+O código está preservado na branch `codex/migracao-supabase-completa` e no [PR #1, em rascunho](https://github.com/jeanpg93-tech/jt-gomes-construtora/pull/1). Build e 19 testes locais passaram. Main não foi alterada. A exportação completa, o SQL de carga e os relatórios com dados reais permanecem fora do repositório.
+
 O estado mais recente está em [PLANO.md](PLANO.md). As ferramentas Base44, Supabase/Kalel, GitHub e Lovable estão acessíveis na nova conversa. Foi criado o projeto Lovable `55f35ed3-f5d6-42e7-8256-451331bc8531` em Jean's Lovable, ainda sem publicação ou transferência do frontend. O email do administrador está confirmado na conversa e no registro privado de execução.
 
 A auditoria recuperou uma cópia privada de 19 entidades/468 registros fora do repositório, em `/workspace/cloud-setup/jt-gomes-construtora/source-snapshot-20261002/`. O pacote antigo omite fornecedores, parcelas, gastos administrativos, etapas e outros módulos. O novo `import_snapshot.py` preservou os 468 registros no ensaio local: 455 operacionais, 11 parcelas no arquivo privado para conciliação e 2 perfis pendentes de Auth. Os 26 fornecedores sem tipo permanecem sem classificação automática, identificados na interface. O importador `import_data.py` continua servindo ao pacote antigo. Build e testes locais aprovados; veja o relatório de ensaio no plano.
 
 A criação automática do Supabase está bloqueada porque `get_cost` não é disponibilizado pelo servidor conectado. Foram solicitadas criação do projeto Free pelo painel e conexão GitHub pela interface do Lovable. O frontend do destino usa TanStack Start/React 19/Vite 8/Tailwind 4; a transferência exigirá adaptação com preservação dos cálculos e telas. As notas abaixo registram o contexto da tarefa de setup anterior.
 
-Esta conversa começou como configuração de ambiente na nuvem. Após autorização do usuário para migrar Base44 → Lovable/Supabase, foram feitas alterações locais de aplicação, banco e importador. Não houve commit, push, PR, criação de projeto remoto ou publicação. Publicar o ambiente é uma ação da interface do Codex e não equivale a publicar a aplicação.
+## Histórico da tarefa de setup anterior
+
+As notas desta seção e das seguintes descrevem o estado anterior à retomada acima. A criação do Lovable, a exportação completa, os 19 testes e o PR são avanços da retomada.
+
+A tarefa anterior começou como configuração de ambiente na nuvem. Após autorização do usuário para migrar Base44 → Lovable/Supabase, foram feitas alterações locais de aplicação, banco e importador. Naquela etapa não houve commit, push, PR, criação de projeto remoto ou publicação. Publicar o ambiente é uma ação da interface do Codex e não equivale a publicar a aplicação.
 
 ## Já preparado
 
