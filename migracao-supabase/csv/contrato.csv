@@ -1,0 +1,2 @@
+﻿id,tipo_contrato,obra_id,obra_nome,area_total,valor_total,valor_m2,forma_pagamento,data_inicio,prazo_quantidade,prazo_unidade,data_termino,data_assinatura,status
+68f38ea7871972ec9a3f313a,construcao_civil,68e9066f27bc8da7fb9e45d1,Residencial Ipanema II,380,330000.0,868.42,jgcjgfgj,2025-10-18,50,meses,2029-12-17,2025-10-18,ativo

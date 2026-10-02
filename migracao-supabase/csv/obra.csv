@@ -1,0 +1,54 @@
+﻿id,nome,endereco,area_construida,area_terreno,data_inicio,data_previsao_entrega,status,ativa,valor_terreno,valor_mao_obra_m2,previsao_gastos_materiais,valor_venda_projetado,valor_venda_real,imposto_percentual,comissao_percentual,foto_url,observacoes
+68ef0c10bdb6e09873cc50c8,2 Triplex Alto Padrão (Guilhermina),Rua Haiti - Guilhermina ,330.0,210.0,,,planejamento,False,618000.0,950.0,500000.0,2700000.0,2403000.0,5.0,6.0,,"Casa 1: 175,57m²
+Casa 2: 152,17m²
+
+Área Construída = 330m²
+M.O = R$950,00/m²
+
+M.O Total = ~R$313.000,00
+Terreno = R$618.000,00
+Material (Aprox.) = R$500.000,00
+
+Valor Gasto Total (Aprox.) = ~R$1.430.000,00
+
+Venda:
+Casa1 = R$1.500.000,00
+Casa2 = R$1.200.000,00
+
+Valor das Casas Total = R$ 2.700.000,00
+
+-11% = R$297.000,00 (Impos. + Comiss.)
+
+Lucro = R$2.403.000,00"
+68e90683cc9f060426095152,Residencial Guilhermina (3 Casas),Rua Haiti - Guilhermina ,314.37,210.0,,,planejamento,True,400000.0,1049.71847,600000.0,2400000.0,2136000.0,5.0,6.0,,"Casa 1: 114,33m²
+Casa 2: 99,53m²
+Casa 3: 100,51m²
+
+Área Construída = 315m²
+M.O = R$950,00/m²
+
+M.O Total = ~R$300.000,00
+Terreno = R$618.000,00
+Material (Aprox.) = R$550.000,00
+
+Valor Gasto Total (Aprox.) = R$1.470.000,00
+
+Venda:
+Casa1 = R$850.000,00
+Casa2 = R$800.000,00
+Casa3 = R$750.000,00
+
+Valor das Casas Total = R$ 2.400.000,00
+
+-11% = R$264.000,00 (Impos. + Comiss.)
+
+Lucro = R$2.136.000,00"
+68e9066f27bc8da7fb9e45d1,Residencial Ipanema II,"Rua Santana do Ipanema, 1063 - Ocian - Praia Grande",380.0,259.0,2025-08-20,2026-06-20,em_andamento,True,400000.0,868.42106,700000.0,2240000.0,,5.0,6.0,https://base44.app/api/apps/68e9048368479eb97b630e22/files/public/68e9048368479eb97b630e22/592b9abe8_ImagemdoWhatsAppde2025-09-23s145911_059a1c51.jpg,"Venda:
+Casa 1 = R$400.000,00 (Triplex)
+Casa 2 = R$400.000,00 (Triplex)
+Casa 3 = R$370.000,00 (Sobrado)
+Casa 4 = R$370.000,00 (Sobrado)
+Casa 5 = R$350.000,00 (Sobr. Baixa)
+Casa 6 = R$350.000,00 (Sobr. Alta)
+
+TOTAL = R$2.010.000,00"
