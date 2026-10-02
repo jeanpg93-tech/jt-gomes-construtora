@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient, resolveFileUrl } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,9 +56,9 @@ export default function Contratos() {
   const loadData = async () => {
     try {
       const [fornecedoresData, obrasData, contratosData] = await Promise.all([
-        base44.entities.Fornecedor.list('-created_date'),
-        base44.entities.Obra.list('-created_date'),
-        base44.entities.Contrato.list('-created_date')
+        dataClient.entities.Fornecedor.list('-created_date'),
+        dataClient.entities.Obra.list('-created_date'),
+        dataClient.entities.Contrato.list('-created_date')
       ]);
       setFornecedores(fornecedoresData);
       setObras(obrasData);
@@ -72,7 +72,7 @@ export default function Contratos() {
 
   const loadDadosConstrutora = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await dataClient.auth.me();
       if (user) {
         setDadosConstrutora({
           razao_social: user.construtora_razao_social || "GOMES E RIBEIRO EMPREENDIMENTOS IMOBILIÁRIOS LTDA",
@@ -102,8 +102,8 @@ export default function Contratos() {
 
     setUploadingFile(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      await base44.entities.Contrato.update(contratoId, {
+      const { file_url } = await dataClient.integrations.Core.UploadFile({ file });
+      await dataClient.entities.Contrato.update(contratoId, {
         arquivo_assinado: file_url
       });
       await loadData();
@@ -120,7 +120,7 @@ export default function Contratos() {
     if (!confirm('Deseja remover o arquivo do contrato assinado?')) return;
 
     try {
-      await base44.entities.Contrato.update(contratoId, {
+      await dataClient.entities.Contrato.update(contratoId, {
         arquivo_assinado: null
       });
       await loadData();
@@ -304,7 +304,7 @@ export default function Contratos() {
     };
 
     try {
-      await base44.entities.Contrato.create({
+      await dataClient.entities.Contrato.create({
         tipo_contrato: contratoData.tipo_contrato,
         tipo_contrato_outro: contratoData.tipo_contrato_outro || null,
         descricao_servicos: contratoData.descricao_servicos,
@@ -398,7 +398,7 @@ export default function Contratos() {
     if (!confirm('Tem certeza que deseja excluir este contrato?')) return;
 
     try {
-      await base44.entities.Contrato.delete(id);
+      await dataClient.entities.Contrato.delete(id);
       loadData();
       alert('Contrato excluído com sucesso!');
     } catch (error) {
@@ -688,7 +688,7 @@ export default function Contratos() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => window.open(contrato.arquivo_assinado, '_blank')}
+                                onClick={async () => { const tab = window.open('', '_blank'); if (tab) tab.opener = null; try { const url = await resolveFileUrl(contrato.arquivo_assinado); if (tab) tab.location.href = url; } catch { tab?.close(); alert('Não foi possível abrir o documento.'); } }}
                               >
                                 <Eye className="w-4 h-4 mr-2" />
                                 Visualizar Arquivo

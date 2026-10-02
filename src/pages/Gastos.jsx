@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client"; // Corrected import for base44
+import { dataClient } from "@/api/dataClient"; // Corrected import for dataClient
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,7 +59,7 @@ export default function Gastos() {
       try {
         // Processar atualizações com delay para evitar rate limit
         for (const gasto of gastosParaAtualizar) {
-          await base44.entities.Gasto.update(gasto.id, { status_pagamento: 'atrasado' });
+          await dataClient.entities.Gasto.update(gasto.id, { status_pagamento: 'atrasado' });
           await delay(100); // 100ms de delay entre atualizações
         }
         
@@ -80,7 +80,7 @@ export default function Gastos() {
     try {
       // Fetch all gastos to find the highest sequential number.
       // Adjust the limit if you expect more than 10000 gastos and want to be sure.
-      const todosGastos = await base44.entities.Gasto.list('-created_date', 10000); 
+      const todosGastos = await dataClient.entities.Gasto.list('-created_date', 10000);
       
       let maiorNumero = 0;
       todosGastos.forEach(gasto => {
@@ -107,25 +107,25 @@ export default function Gastos() {
       setLoading(true);
       
       // Fazer as chamadas sequencialmente com delay para evitar rate limit
-      const obraData = await base44.entities.Obra.list('-created_date');
+      const obraData = await dataClient.entities.Obra.list('-created_date');
       await delay(200);
       
-      const categoriaData = await base44.entities.CategoriaGasto.list();
+      const categoriaData = await dataClient.entities.CategoriaGasto.list();
       await delay(200);
       
-      const subcategoriaData = await base44.entities.SubcategoriaGasto.list();
+      const subcategoriaData = await dataClient.entities.SubcategoriaGasto.list();
       await delay(200);
       
-      const etapaData = await base44.entities.EtapaObra.list(); 
+      const etapaData = await dataClient.entities.EtapaObra.list();
       await delay(200);
       
-      const fornecedorData = await base44.entities.Fornecedor.list();
+      const fornecedorData = await dataClient.entities.Fornecedor.list();
       await delay(200);
 
-      const gastoData = await base44.entities.Gasto.list('-created_date');
+      const gastoData = await dataClient.entities.Gasto.list('-created_date');
       await delay(200);
 
-      const parcelasData = await base44.entities.ParcelaGasto.list('-created_date', 10000);
+      const parcelasData = await dataClient.entities.ParcelaGasto.list('-created_date', 10000);
       
       const gastosAtualizados = await verificarEAtualizarGastosAtrasados(gastoData);
       
@@ -232,19 +232,19 @@ export default function Gastos() {
       let savedGastoId = editingGasto?.id;
 
       if (editingGasto && editingGasto.id) {
-        await base44.entities.Gasto.update(editingGasto.id, processedData);
+        await dataClient.entities.Gasto.update(editingGasto.id, processedData);
         savedGastoId = editingGasto.id;
         await delay(200);
       } else {
-        const createdGasto = await base44.entities.Gasto.create(processedData);
+        const createdGasto = await dataClient.entities.Gasto.create(processedData);
         savedGastoId = createdGasto.id;
         await delay(200);
       }
 
       if (data.eh_recorrente && savedGastoId) {
-        const parcelasExistentes = await base44.entities.ParcelaGasto.filter({ gasto_id: savedGastoId });
+        const parcelasExistentes = await dataClient.entities.ParcelaGasto.filter({ gasto_id: savedGastoId });
         for (const parcela of parcelasExistentes) {
-          await base44.entities.ParcelaGasto.delete(parcela.id);
+          await dataClient.entities.ParcelaGasto.delete(parcela.id);
           await delay(50);
         }
 
@@ -261,7 +261,7 @@ export default function Gastos() {
           }));
 
         if (parcelasParaCriar.length > 0) {
-          await base44.entities.ParcelaGasto.bulkCreate(parcelasParaCriar);
+          await dataClient.entities.ParcelaGasto.bulkCreate(parcelasParaCriar);
           await delay(200);
         }
       }
@@ -329,7 +329,7 @@ export default function Gastos() {
     try {
       // Deletar um por vez com delay para evitar rate limit
       for (const id of selectedIds) {
-        await base44.entities.Gasto.delete(id);
+        await dataClient.entities.Gasto.delete(id);
         await delay(200); // 200ms de delay entre exclusões
       }
       

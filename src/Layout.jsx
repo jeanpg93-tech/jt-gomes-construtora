@@ -1,7 +1,8 @@
+import FileImage from '@/components/FileImage';
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { 
   Home, 
   Building2, 
@@ -102,7 +103,7 @@ export default function Layout({ children }) {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const user = await base44.auth.me();
+        const user = await dataClient.auth.me();
         if (user) {
           setUserInfo({
             name: user.full_name,
@@ -130,7 +131,7 @@ export default function Layout({ children }) {
         <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
           <div className="flex items-center gap-3 flex-1 min-w-0">
             {workspaceInfo.logoUrl ? (
-              <img src={workspaceInfo.logoUrl} alt="Logo" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+              <FileImage src={workspaceInfo.logoUrl} alt="Logo" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
             ) : (
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center flex-shrink-0">
                 <Building2 className="w-6 h-6 text-white" />
@@ -381,7 +382,7 @@ export default function Layout({ children }) {
         <div className="flex items-center justify-between max-w-[1920px] mx-auto">
           <div className="flex items-center gap-3">
             {workspaceInfo.logoUrl ? (
-              <img src={workspaceInfo.logoUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover shadow-sm" />
+              <FileImage src={workspaceInfo.logoUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover shadow-sm" />
             ) : (
               <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-sm">
                 <Building2 className="w-7 h-7 text-white" />

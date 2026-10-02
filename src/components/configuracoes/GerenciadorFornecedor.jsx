@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataClient } from '@/api/dataClient';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,7 +20,7 @@ export default function GerenciadorFornecedor() {
   const loadFornecedores = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.Fornecedor.list();
+      const data = await dataClient.entities.Fornecedor.list();
       setFornecedores(data);
     } catch (error) {
       console.error('Erro ao carregar fornecedores:', error);
@@ -32,7 +32,7 @@ export default function GerenciadorFornecedor() {
   const handleAdd = async () => {
     if (!newFornecedor.nome.trim()) return;
     try {
-      await base44.entities.Fornecedor.create({
+      await dataClient.entities.Fornecedor.create({
         nome: newFornecedor.nome.trim(),
         contato: newFornecedor.contato.trim() || null,
         observacoes: newFornecedor.observacoes.trim() || null
@@ -47,7 +47,7 @@ export default function GerenciadorFornecedor() {
   const handleDelete = async (id) => {
     if (!confirm('Tem certeza que deseja excluir este fornecedor?')) return;
     try {
-      await base44.entities.Fornecedor.delete(id);
+      await dataClient.entities.Fornecedor.delete(id);
       await loadFornecedores();
     } catch (error) {
       console.error('Erro ao excluir fornecedor:', error);
@@ -71,7 +71,7 @@ export default function GerenciadorFornecedor() {
   const handleSaveEdit = async () => {
     if (!editingData.nome.trim() || !editingId) return;
     try {
-      await base44.entities.Fornecedor.update(editingId, {
+      await dataClient.entities.Fornecedor.update(editingId, {
         nome: editingData.nome.trim(),
         contato: editingData.contato.trim() || null,
         observacoes: editingData.observacoes.trim() || null

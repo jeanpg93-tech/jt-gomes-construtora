@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ export default function Fornecedores() {
 
   const loadData = async () => {
     try {
-      const fornecedoresData = await base44.entities.Fornecedor.list('-created_date');
+      const fornecedoresData = await dataClient.entities.Fornecedor.list('-created_date');
       setFornecedores(fornecedoresData);
     } catch (error) {
       console.error('Erro ao carregar fornecedores:', error);
@@ -46,7 +46,7 @@ export default function Fornecedores() {
     }
     
     try {
-      await base44.entities.Fornecedor.delete(id);
+      await dataClient.entities.Fornecedor.delete(id);
       loadData();
     } catch (error) {
       console.error('Erro ao excluir fornecedor:', error);
@@ -144,6 +144,9 @@ export default function Fornecedores() {
                     {fornecedor.nome_fantasia && (
                       <p className="text-xs text-slate-500">{fornecedor.nome_fantasia}</p>
                     )}
+                    {!fornecedor.tipo && (
+                      <p className="text-xs text-amber-700">Cadastro incompleto: selecione PF ou PJ ao editar</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -153,7 +156,7 @@ export default function Fornecedores() {
               <div className="space-y-2 text-sm">
                 {fornecedor.cpf_cnpj && (
                   <div className="flex items-center gap-2 text-slate-600">
-                    <span className="font-semibold">{fornecedor.tipo === 'juridica' ? 'CNPJ:' : 'CPF:'}</span>
+                    <span className="font-semibold">{fornecedor.tipo === 'juridica' ? 'CNPJ:' : fornecedor.tipo === 'fisica' ? 'CPF:' : 'CPF/CNPJ:'}</span>
                     <span>{fornecedor.cpf_cnpj}</span>
                   </div>
                 )}

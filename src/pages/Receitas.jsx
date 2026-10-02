@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,9 +33,9 @@ export default function Receitas() {
   const loadData = async () => {
     try {
       const [receitaData, obraData, categoriaData] = await Promise.all([
-        base44.entities.Receita.list('-created_date'),
-        base44.entities.Obra.list('-created_date'),
-        base44.entities.CategoriaReceita.list()
+        dataClient.entities.Receita.list('-created_date'),
+        dataClient.entities.Obra.list('-created_date'),
+        dataClient.entities.CategoriaReceita.list()
       ]);
       
       setReceitas(receitaData);
@@ -111,9 +111,9 @@ export default function Receitas() {
       };
       
       if (editingReceita) {
-        await base44.entities.Receita.update(editingReceita.id, processedData);
+        await dataClient.entities.Receita.update(editingReceita.id, processedData);
       } else {
-        await base44.entities.Receita.create(processedData);
+        await dataClient.entities.Receita.create(processedData);
       }
       setShowForm(false);
       setEditingReceita(null);
@@ -151,7 +151,7 @@ export default function Receitas() {
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
     try {
-      const deletePromises = Array.from(selectedIds).map(id => base44.entities.Receita.delete(id));
+      const deletePromises = Array.from(selectedIds).map(id => dataClient.entities.Receita.delete(id));
       await Promise.all(deletePromises);
       setSelectedIds(new Set());
       setIsSelectMode(false);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ export default function SolicitarAcesso() {
     setLoading(true);
 
     try {
-      await base44.entities.SolicitacaoCadastro.create({
+      await dataClient.entities.SolicitacaoCadastro.create({
         ...formData,
         status: 'pendente'
       });
@@ -50,7 +50,7 @@ export default function SolicitarAcesso() {
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-3">Solicitação Enviada!</h2>
             <p className="text-slate-600 mb-6">
-              Sua solicitação de acesso foi enviada com sucesso. O administrador receberá sua solicitação e você será notificado por email quando for aprovado.
+              Sua solicitação de acesso foi enviada com sucesso. O administrador receberá sua solicitação e você poderá criar sua conta após a aprovação. Entre em contato com o administrador para acompanhar seu pedido.
             </p>
             <Button 
               onClick={() => window.location.reload()}
@@ -79,7 +79,7 @@ export default function SolicitarAcesso() {
         <CardContent className="p-8">
           <div className="bg-blue-50 border-l-4 border-blue-600 p-4 rounded mb-6">
             <p className="text-sm text-blue-800">
-              <strong>Atenção:</strong> Após enviar sua solicitação, o administrador receberá seus dados e analisará seu pedido. Você receberá um email quando sua solicitação for aprovada ou negada.
+              <strong>Atenção:</strong> Após enviar sua solicitação, o administrador receberá seus dados e analisará seu pedido. Entre em contato com o administrador para acompanhar a aprovação do seu pedido.
             </p>
           </div>
 

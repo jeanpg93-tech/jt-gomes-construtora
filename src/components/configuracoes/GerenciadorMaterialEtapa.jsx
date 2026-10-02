@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, Package } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataClient } from '@/api/dataClient';
 
 export default function GerenciadorMaterialEtapa() {
   const [materiais, setMateriais] = useState([]);
@@ -29,9 +29,9 @@ export default function GerenciadorMaterialEtapa() {
     setLoading(true);
     try {
       const [matData, etapaData, matEtapaData] = await Promise.all([
-        base44.entities.Material.list(),
-        base44.entities.EtapaObra.list(),
-        base44.entities.MaterialEtapa.list()
+        dataClient.entities.Material.list(),
+        dataClient.entities.EtapaObra.list(),
+        dataClient.entities.MaterialEtapa.list()
       ]);
       setMateriais(matData);
       setEtapas(etapaData.sort((a, b) => (a.ordem || 999) - (b.ordem || 999)));
@@ -65,12 +65,12 @@ export default function GerenciadorMaterialEtapa() {
       // Remover associações antigas
       const oldAssociations = materialEtapas.filter(me => me.material_id === selectedMaterialId);
       for (const assoc of oldAssociations) {
-        await base44.entities.MaterialEtapa.delete(assoc.id);
+        await dataClient.entities.MaterialEtapa.delete(assoc.id);
       }
 
       // Criar novas associações
       for (const etapaId of selectedEtapas) {
-        await base44.entities.MaterialEtapa.create({
+        await dataClient.entities.MaterialEtapa.create({
           material_id: selectedMaterialId,
           etapa_obra_id: etapaId
         });

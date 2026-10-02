@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +46,7 @@ export default function Recibos() {
 
   const loadData = async () => {
     try {
-      const fornecedoresData = await base44.entities.Fornecedor.list('-created_date');
+      const fornecedoresData = await dataClient.entities.Fornecedor.list('-created_date');
       setFornecedores(fornecedoresData);
     } catch (error) {
       console.error('Erro ao carregar fornecedores:', error);
@@ -83,7 +83,7 @@ export default function Recibos() {
 
     // Salvar recibo no banco de dados
     try {
-      await base44.entities.Recibo.create({
+      await dataClient.entities.Recibo.create({
         fornecedor_id: reciboData.fornecedor_id,
         valor: parseFloat(reciboData.valor),
         data_pagamento: reciboData.data_pagamento,

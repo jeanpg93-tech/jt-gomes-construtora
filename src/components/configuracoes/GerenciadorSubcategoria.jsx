@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Edit, Save, X } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataClient } from '@/api/dataClient';
 
 export default function GerenciadorSubcategoria({ categorias }) {
   const [subcategorias, setSubcategorias] = useState([]);
@@ -19,7 +19,7 @@ export default function GerenciadorSubcategoria({ categorias }) {
   const loadSubcategorias = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.SubcategoriaGasto.list();
+      const data = await dataClient.entities.SubcategoriaGasto.list();
       setSubcategorias(data);
     } catch (error) {
       console.error('Erro ao carregar tipos:', error);
@@ -31,7 +31,7 @@ export default function GerenciadorSubcategoria({ categorias }) {
   const handleAdd = async () => {
     if (!newSubcategoria.nome.trim() || !newSubcategoria.categoria_id) return;
     try {
-      await base44.entities.SubcategoriaGasto.create({
+      await dataClient.entities.SubcategoriaGasto.create({
         nome: newSubcategoria.nome.trim(),
         categoria_id: newSubcategoria.categoria_id
       });
@@ -44,7 +44,7 @@ export default function GerenciadorSubcategoria({ categorias }) {
 
   const handleDelete = async (id) => {
     try {
-      await base44.entities.SubcategoriaGasto.delete(id);
+      await dataClient.entities.SubcategoriaGasto.delete(id);
       await loadSubcategorias();
     } catch (error) {
       console.error('Erro ao excluir tipo:', error);
@@ -64,7 +64,7 @@ export default function GerenciadorSubcategoria({ categorias }) {
   const handleSaveEditing = async () => {
     if (!editingData.nome.trim() || !editingData.categoria_id || !editingId) return;
     try {
-      await base44.entities.SubcategoriaGasto.update(editingId, {
+      await dataClient.entities.SubcategoriaGasto.update(editingId, {
         nome: editingData.nome.trim(),
         categoria_id: editingData.categoria_id
       });

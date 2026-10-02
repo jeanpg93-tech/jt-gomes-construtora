@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, Save, Calendar as CalendarIcon, Plus } from "lucide-react";
 import SearchableSelect from "@/components/ui/SearchableSelect";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 
 import CriacaoRapidaModal from "./CriacaoRapidaModal";
 import ParcelasEditor from "./ParcelasEditor";
@@ -104,7 +104,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
         return;
       }
 
-      const parcelasExistentes = await base44.entities.ParcelaGasto.filter({ gasto_id: gasto.id });
+      const parcelasExistentes = await dataClient.entities.ParcelaGasto.filter({ gasto_id: gasto.id });
       const parcelasOrdenadas = parcelasExistentes
         .sort((a, b) => (a.numero_parcela || 0) - (b.numero_parcela || 0))
         .map((parcela) => ({
@@ -151,7 +151,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   const loadData = async () => {
     try {
       // EtapasObra and Fornecedores are now passed as props, so no need to fetch them here initially
-      const subData = await base44.entities.SubcategoriaGasto.list();
+      const subData = await dataClient.entities.SubcategoriaGasto.list();
       setSubcategorias(subData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -278,19 +278,19 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   // Removed handleFileUpload, handleRemoveFile, getFileName functions
 
   const handleCategoriaCreated = async (novaCategoria) => {
-    const updatedCategorias = await base44.entities.CategoriaGasto.list();
+    const updatedCategorias = await dataClient.entities.CategoriaGasto.list();
     setCategorias(updatedCategorias);
     setFormData(prev => ({ ...prev, categoria_id: novaCategoria.id }));
   };
 
   const handleSubcategoriaCreated = async (novaSubcategoria) => {
-    const updatedSubcategorias = await base44.entities.SubcategoriaGasto.list();
+    const updatedSubcategorias = await dataClient.entities.SubcategoriaGasto.list();
     setSubcategorias(updatedSubcategorias);
     setFormData(prev => ({ ...prev, subcategoria_id: novaSubcategoria.id }));
   };
 
   const handleEtapaCreated = async (novaEtapa) => {
-    const updatedEtapas = await base44.entities.EtapaObra.list();
+    const updatedEtapas = await dataClient.entities.EtapaObra.list();
     setEtapasObra(updatedEtapas.sort((a, b) => (a.ordem || 999) - (b.ordem || 999)));
     setFormData(prev => ({ 
       ...prev, 
@@ -299,7 +299,7 @@ export default function GastoForm({ gasto, obras, categorias: categoriasInicial,
   };
 
   const handleFornecedorCreated = async (novoFornecedor) => {
-    const updatedFornecedores = await base44.entities.Fornecedor.list();
+    const updatedFornecedores = await dataClient.entities.Fornecedor.list();
     setFornecedores(updatedFornecedores);
     setFormData(prev => ({ ...prev, fornecedor_id: novoFornecedor.id }));
   };

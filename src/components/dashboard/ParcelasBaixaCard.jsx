@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { CheckCircle2, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 
 export default function ParcelasBaixaCard({ grupos, onUpdated }) {
   const [datas, setDatas] = useState({});
@@ -18,7 +18,7 @@ export default function ParcelasBaixaCard({ grupos, onUpdated }) {
   const marcarPago = async (parcela) => {
     const dataPagamento = datas[parcela.id] || hoje;
     setLoadingId(parcela.id);
-    await base44.entities.ParcelaGasto.update(parcela.id, {
+    await dataClient.entities.ParcelaGasto.update(parcela.id, {
       status: 'pago',
       data_pagamento: dataPagamento,
     });

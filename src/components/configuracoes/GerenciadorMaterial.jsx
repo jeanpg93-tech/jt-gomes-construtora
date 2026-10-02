@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Edit, Save, X } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataClient } from '@/api/dataClient';
 
 export default function GerenciadorMaterial({ categorias, subcategorias }) {
   const [materiais, setMateriais] = useState([]);
@@ -25,7 +25,7 @@ export default function GerenciadorMaterial({ categorias, subcategorias }) {
   const loadMateriais = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.Material.list();
+      const data = await dataClient.entities.Material.list();
       setMateriais(data);
     } catch (error) {
       console.error('Erro ao carregar materiais:', error);
@@ -37,7 +37,7 @@ export default function GerenciadorMaterial({ categorias, subcategorias }) {
   const handleAdd = async () => {
     if (!newMaterial.nome.trim() || !newMaterial.subcategoria_gasto_id) return;
     try {
-      await base44.entities.Material.create({
+      await dataClient.entities.Material.create({
         nome: newMaterial.nome.trim(),
         unidade_medida: newMaterial.unidade_medida,
         subcategoria_gasto_id: newMaterial.subcategoria_gasto_id,
@@ -59,7 +59,7 @@ export default function GerenciadorMaterial({ categorias, subcategorias }) {
 
   const handleDelete = async (id) => {
     try {
-      await base44.entities.Material.delete(id);
+      await dataClient.entities.Material.delete(id);
       await loadMateriais();
     } catch (error) {
       console.error('Erro ao excluir material:', error);
@@ -79,7 +79,7 @@ export default function GerenciadorMaterial({ categorias, subcategorias }) {
   const handleSaveEditing = async () => {
     if (!editingData.nome.trim() || !editingData.subcategoria_gasto_id || !editingId) return;
     try {
-      await base44.entities.Material.update(editingId, {
+      await dataClient.entities.Material.update(editingId, {
         nome: editingData.nome.trim(),
         unidade_medida: editingData.unidade_medida,
         subcategoria_gasto_id: editingData.subcategoria_gasto_id,

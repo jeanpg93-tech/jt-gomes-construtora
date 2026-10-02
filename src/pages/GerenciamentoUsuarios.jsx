@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"; // New import
@@ -50,9 +50,9 @@ export default function GerenciamentoUsuarios() {
   const loadData = async () => {
     try {
       const [user, usersList, solicitacoesList] = await Promise.all([ // Modified
-        base44.auth.me(),
-        base44.entities.User.list(),
-        base44.entities.SolicitacaoCadastro.list('-created_date') // New fetch
+        dataClient.auth.me(),
+        dataClient.entities.User.list(),
+        dataClient.entities.SolicitacaoCadastro.list('-created_date') // New fetch
       ]);
       setCurrentUser(user);
       setUsuarios(usersList);
@@ -81,7 +81,7 @@ export default function GerenciamentoUsuarios() {
     if (!editingUser) return;
 
     try {
-      await base44.entities.User.update(editingUser.id, formData);
+      await dataClient.entities.User.update(editingUser.id, formData);
       setEditingUser(null);
       await loadData();
       alert('Permissões atualizadas com sucesso!');
@@ -94,23 +94,12 @@ export default function GerenciamentoUsuarios() {
   const handleAprovarSolicitacao = async (solicitacao) => { // New function
     try {
       // Atualizar a solicitação com status aprovado e permissões
-      await base44.entities.SolicitacaoCadastro.update(solicitacao.id, {
+      await dataClient.entities.SolicitacaoCadastro.update(solicitacao.id, {
         status: 'aprovado',
         data_aprovacao: new Date().toISOString().split('T')[0],
         aprovado_por: currentUser.email,
         ...permissoesAprovacao
       });
-
-      // Enviar email para o usuário informando que foi aprovado
-      try {
-        await base44.integrations.Core.SendEmail({
-          to: solicitacao.email,
-          subject: 'Acesso Aprovado - Sistema de Gestão de Obras',
-          body: `Olá ${solicitacao.nome_completo},\n\nSua solicitação de acesso ao sistema foi aprovada!\n\nAgora você precisa criar sua conta. Por favor, acesse o link abaixo e clique em "Sign Up" para criar sua conta usando o email: ${solicitacao.email}\n\nhttps://app.base44.com/dashboard\n\nApós criar sua conta, você já poderá acessar o sistema com as permissões definidas.\n\nSe tiver dúvidas, entre em contato com o administrador.\n\nAtenciosamente,\nEquipe de Gestão de Obras`
-        });
-      } catch (emailError) {
-        console.error('Erro ao enviar email de aprovação:', emailError);
-      }
 
       setApprovingSolicitacao(null);
       // Resetar permissões de aprovação para o próximo uso
@@ -125,7 +114,7 @@ export default function GerenciamentoUsuarios() {
       });
       
       await loadData();
-      alert(`Solicitação aprovada! Um email foi enviado para ${solicitacao.email} com instruções para criar a conta.`);
+      alert(`Solicitação aprovada! ${solicitacao.email} já pode criar a conta pela tela de login do sistema.`);
     } catch (error) {
       console.error('Erro ao aprovar solicitação:', error);
       alert('Erro ao aprovar solicitação.');
@@ -146,28 +135,17 @@ export default function GerenciamentoUsuarios() {
           return;
       }
       
-      await base44.entities.SolicitacaoCadastro.update(solicitacaoId, {
+      await dataClient.entities.SolicitacaoCadastro.update(solicitacaoId, {
         status: 'negado',
         data_aprovacao: new Date().toISOString().split('T')[0], // Using data_aprovacao field for denial date too.
         aprovado_por: currentUser.email,
         motivo_negacao: motivoNegacao
       });
 
-      // Enviar email informando a negação
-      try {
-        await base44.integrations.Core.SendEmail({
-          to: solicitacao.email,
-          subject: 'Solicitação de Acesso - Sistema de Gestão de Obras',
-          body: `Olá ${solicitacao.nome_completo},\n\nInfelizmente sua solicitação de acesso ao sistema não foi aprovada.\n\nMotivo: ${motivoNegacao}\n\nSe tiver dúvidas, entre em contato com o administrador.\n\nAtenciosamente,\nEquipe de Gestão de Obras`
-        });
-      } catch (emailError) {
-        console.error('Erro ao enviar email de negação:', emailError);
-      }
-
       setDenyingId(null);
       setMotivoNegacao('');
       await loadData();
-      alert('Solicitação negada e usuário notificado por email.');
+      alert('Solicitação negada. Entre em contato com o solicitante para informar a decisão.');
     } catch (error) {
       console.error('Erro ao negar solicitação:', error);
       alert('Erro ao negar solicitação.');
@@ -200,7 +178,7 @@ export default function GerenciamentoUsuarios() {
     e.preventDefault();
     e.stopPropagation();
     
-    const url = 'https://app.base44.com/dashboard';
+    const url = `${window.location.origin}/login`;
     
     // Tentar abrir em nova aba
     try {

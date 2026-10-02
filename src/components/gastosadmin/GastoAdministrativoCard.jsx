@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,8 @@ export default function GastoAdministrativoCard({ gasto, onEdit, onDelete, onDup
   const loadData = async () => {
     try {
       const [categoriasData, fornecedoresData] = await Promise.all([
-        base44.entities.CategoriaGastoAdministrativo.list(),
-        base44.entities.Fornecedor.list()
+        dataClient.entities.CategoriaGastoAdministrativo.list(),
+        dataClient.entities.Fornecedor.list()
       ]);
       setCategorias(categoriasData);
       setFornecedores(fornecedoresData);

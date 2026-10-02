@@ -1,5 +1,6 @@
+import FileImage from '@/components/FileImage';
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ export default function Relatorios() {
   };
 
   const loadWorkspaceInfo = async () => {
-    const user = await base44.auth.me();
+    const user = await dataClient.auth.me();
     if (user) {
       setWorkspaceInfo({
         name: user.workspace_name || 'ConstrutoraPro',
@@ -85,16 +86,16 @@ export default function Relatorios() {
   const loadData = async () => {
     try {
       const [obraData, gastoData, receitaData, gastosAdminData, catGastoData, subcatGastoData, subcatGasto2Data, parcelaData, fornecedorData, etapaData] = await Promise.all([
-        base44.entities.Obra.list('-created_date'),
-        base44.entities.Gasto.list(),
-        base44.entities.Receita.list(),
-        base44.entities.GastoAdministrativo.list(),
-        base44.entities.CategoriaGasto.list(),
-        base44.entities.SubcategoriaGasto.list(),
-        base44.entities.SubcategoriaGasto2.list(),
-        base44.entities.ParcelaGasto.list(),
-        base44.entities.Fornecedor.list(),
-        base44.entities.EtapaObra.list()
+        dataClient.entities.Obra.list('-created_date'),
+        dataClient.entities.Gasto.list(),
+        dataClient.entities.Receita.list(),
+        dataClient.entities.GastoAdministrativo.list(),
+        dataClient.entities.CategoriaGasto.list(),
+        dataClient.entities.SubcategoriaGasto.list(),
+        dataClient.entities.SubcategoriaGasto2.list(),
+        dataClient.entities.ParcelaGasto.list(),
+        dataClient.entities.Fornecedor.list(),
+        dataClient.entities.EtapaObra.list()
       ]);
       setObras(obraData);
       setGastos(gastoData);
@@ -277,7 +278,7 @@ export default function Relatorios() {
             <div className="print-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
                 {workspaceInfo.logoUrl && (
-                  <img src={workspaceInfo.logoUrl} alt="Logo" style={{ height: '56px', width: 'auto', objectFit: 'contain' }} />
+                  <FileImage src={workspaceInfo.logoUrl} alt="Logo" style={{ height: '56px', width: 'auto', objectFit: 'contain' }} />
                 )}
                 <div>
                   <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#1e293b' }}>{workspaceInfo.name}</h1>

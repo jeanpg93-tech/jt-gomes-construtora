@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { dataClient } from '@/api/dataClient';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Edit, Save, X } from 'lucide-react';
@@ -18,7 +18,7 @@ export default function GerenciadorCategoria() {
   const loadItems = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.CategoriaGasto.list();
+      const data = await dataClient.entities.CategoriaGasto.list();
       setItems(data);
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
@@ -30,7 +30,7 @@ export default function GerenciadorCategoria() {
   const handleAddItem = async () => {
     if (!newItemName.trim()) return;
     try {
-      await base44.entities.CategoriaGasto.create({ nome: newItemName.trim() });
+      await dataClient.entities.CategoriaGasto.create({ nome: newItemName.trim() });
       setNewItemName('');
       await loadItems();
     } catch (error) {
@@ -41,7 +41,7 @@ export default function GerenciadorCategoria() {
   const handleDeleteItem = async (id) => {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
     try {
-      await base44.entities.CategoriaGasto.delete(id);
+      await dataClient.entities.CategoriaGasto.delete(id);
       await loadItems();
     } catch (error) {
       console.error('Erro ao excluir categoria:', error);
@@ -61,7 +61,7 @@ export default function GerenciadorCategoria() {
   const handleSaveEditing = async () => {
     if (!editingItemName.trim() || !editingItemId) return;
     try {
-      await base44.entities.CategoriaGasto.update(editingItemId, { nome: editingItemName.trim() });
+      await dataClient.entities.CategoriaGasto.update(editingItemId, { nome: editingItemName.trim() });
       handleCancelEditing();
       await loadItems();
     } catch (error) {

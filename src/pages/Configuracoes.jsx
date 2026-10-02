@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Tag, Grid3x3, Layers } from "lucide-react";
@@ -20,7 +20,7 @@ export default function Configuracoes() {
 
   const loadData = async () => {
     try {
-      const categoriasData = await base44.entities.CategoriaGasto.list();
+      const categoriasData = await dataClient.entities.CategoriaGasto.list();
       setCategorias(categoriasData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);

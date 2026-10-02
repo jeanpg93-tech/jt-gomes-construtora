@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Building2, Search, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 
 import ObraForm from "../components/obras/ObraForm";
 import ObraCard from "../components/obras/ObraCard";
@@ -25,7 +25,7 @@ export default function Obras() {
 
   const loadObras = async () => {
     try {
-      const data = await base44.entities.Obra.list('-created_date');
+      const data = await dataClient.entities.Obra.list('-created_date');
       setObras(data);
     } catch (error) {
       console.error('Erro ao carregar obras:', error);
@@ -36,7 +36,7 @@ export default function Obras() {
 
   const loadGastos = async () => {
     try {
-      const gastosData = await base44.entities.Gasto.list();
+      const gastosData = await dataClient.entities.Gasto.list();
       setGastos(gastosData);
     } catch (error) {
       console.error('Erro ao carregar gastos:', error);
@@ -59,9 +59,9 @@ export default function Obras() {
   const handleSave = async (data) => {
     try {
       if (editingObra) {
-        await base44.entities.Obra.update(editingObra.id, data);
+        await dataClient.entities.Obra.update(editingObra.id, data);
       } else {
-        await base44.entities.Obra.create(data);
+        await dataClient.entities.Obra.create(data);
       }
       setShowForm(false);
       setEditingObra(null);
@@ -100,7 +100,7 @@ export default function Obras() {
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
     try {
-      const deletePromises = Array.from(selectedIds).map(id => base44.entities.Obra.delete(id));
+      const deletePromises = Array.from(selectedIds).map(id => dataClient.entities.Obra.delete(id));
       await Promise.all(deletePromises);
       setSelectedIds(new Set());
       setIsSelectMode(false);

@@ -1,5 +1,6 @@
+import FileImage from '@/components/FileImage';
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,7 +108,7 @@ export default function ObraForm({ obra, onSave, onCancel }) {
 
     setUploadingFoto(true);
     try {
-      const result = await base44.integrations.Core.UploadFile({ file });
+      const result = await dataClient.integrations.Core.UploadFile({ file });
       setFormData(prev => ({ ...prev, foto_url: result.file_url }));
     } catch (error) {
       console.error('Erro ao fazer upload da foto:', error);
@@ -217,7 +218,7 @@ export default function ObraForm({ obra, onSave, onCancel }) {
                 
                 {formData.foto_url && (
                   <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border">
-                    <img 
+                    <FileImage
                       src={formData.foto_url} 
                       alt="Foto da obra" 
                       className="w-24 h-24 rounded-lg object-cover shadow-md"

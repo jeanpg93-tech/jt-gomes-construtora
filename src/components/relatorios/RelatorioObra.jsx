@@ -1,3 +1,4 @@
+import FileImage from '@/components/FileImage';
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -133,7 +134,7 @@ export default function RelatorioObra({ obra, obras, gastos, receitas, contratos
         <div className="print-header">
           <div className="print-logo-section flex items-center gap-4">
             {workspaceInfo?.logoUrl && (
-              <img src={workspaceInfo.logoUrl} alt="Logo" className="print-logo h-16 w-auto" />
+              <FileImage src={workspaceInfo.logoUrl} alt="Logo" className="print-logo h-16 w-auto" />
             )}
             <div className="print-company-info">
               <h1 className="text-2xl font-bold text-slate-900">{workspaceInfo?.name}</h1>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,8 +52,8 @@ export default function GastoAdministrativoForm({ gasto, onSave, onCancel }) {
   const loadData = async () => {
     try {
       const [categoriasData, fornecedoresData] = await Promise.all([
-        base44.entities.CategoriaGastoAdministrativo.list(),
-        base44.entities.Fornecedor.list()
+        dataClient.entities.CategoriaGastoAdministrativo.list(),
+        dataClient.entities.Fornecedor.list()
       ]);
       setCategorias(categoriasData);
       setFornecedores(fornecedoresData);
