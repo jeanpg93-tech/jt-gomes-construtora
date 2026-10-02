@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Briefcase, TrendingDown } from "lucide-react";
@@ -19,7 +19,7 @@ export default function GastosAdministrativos() {
 
   const loadData = async () => {
     try {
-      const gastosData = await base44.entities.GastoAdministrativo.list('-created_date');
+      const gastosData = await dataClient.entities.GastoAdministrativo.list('-created_date');
       setGastosAdmin(gastosData);
     } catch (error) {
       console.error('Erro ao carregar gastos administrativos:', error);
@@ -101,9 +101,9 @@ export default function GastosAdministrativos() {
 
       // Verifica se tem ID válido para decidir entre update ou create
       if (editingGasto && editingGasto.id) {
-        await base44.entities.GastoAdministrativo.update(editingGasto.id, processedData);
+        await dataClient.entities.GastoAdministrativo.update(editingGasto.id, processedData);
       } else {
-        await base44.entities.GastoAdministrativo.create(processedData);
+        await dataClient.entities.GastoAdministrativo.create(processedData);
       }
       setShowForm(false);
       setEditingGasto(null);
@@ -136,7 +136,7 @@ export default function GastosAdministrativos() {
   const handleDelete = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este gasto administrativo?')) {
       try {
-        await base44.entities.GastoAdministrativo.delete(id);
+        await dataClient.entities.GastoAdministrativo.delete(id);
         loadData();
       } catch (error) {
         console.error('Erro ao excluir gasto administrativo:', error);

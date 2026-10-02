@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 
 export default function GastosRecentes({ gastos = [], gastosAdmin = [] }) {
   const [categorias, setCategorias] = useState([]);
@@ -17,8 +17,8 @@ export default function GastosRecentes({ gastos = [], gastosAdmin = [] }) {
     const fetchCategorias = async () => {
       try {
         const [cats, catsAdmin] = await Promise.all([
-          base44.entities.CategoriaGasto.list(),
-          base44.entities.CategoriaGastoAdministrativo.list()
+          dataClient.entities.CategoriaGasto.list(),
+          dataClient.entities.CategoriaGastoAdministrativo.list()
         ]);
         setCategorias(cats);
         setCategoriasAdmin(catsAdmin);

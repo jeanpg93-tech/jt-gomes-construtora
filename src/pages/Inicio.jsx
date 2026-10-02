@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -37,12 +37,12 @@ export default function Inicio() {
 
   const checkUserAndLoadData = async () => {
     try {
-      await base44.auth.me();
+      await dataClient.auth.me();
       setUserAuthenticated(true);
       loadData();
     } catch (error) {
       console.log('Usuário não autenticado, redirecionando para login...', error);
-      await base44.auth.redirectToLogin(window.location.href);
+      await dataClient.auth.redirectToLogin(window.location.href);
     }
   };
 
@@ -56,13 +56,13 @@ export default function Inicio() {
     setLoading(true);
     try {
       const [obraData, gastoData, receitaData, gastosAdminData, categoriaData, etapaData, parcelasData] = await Promise.all([
-        base44.entities.Obra.list('-created_date'),
-        base44.entities.Gasto.list('-created_date'),
-        base44.entities.Receita.list('-created_date'),
-        base44.entities.GastoAdministrativo.list('-created_date'),
-        base44.entities.CategoriaGasto.list(),
-        base44.entities.EtapaObra.list(),
-        base44.entities.ParcelaGasto.list('-created_date')
+        dataClient.entities.Obra.list('-created_date'),
+        dataClient.entities.Gasto.list('-created_date'),
+        dataClient.entities.Receita.list('-created_date'),
+        dataClient.entities.GastoAdministrativo.list('-created_date'),
+        dataClient.entities.CategoriaGasto.list(),
+        dataClient.entities.EtapaObra.list(),
+        dataClient.entities.ParcelaGasto.list('-created_date')
       ]);
       
       setObras(obraData);
@@ -86,7 +86,7 @@ export default function Inicio() {
 
   const handleSaveGasto = async (data) => {
     try {
-      await base44.entities.Gasto.update(editingGasto.id, data);
+      await dataClient.entities.Gasto.update(editingGasto.id, data);
       setShowEditForm(false);
       setEditingGasto(null);
       loadData();

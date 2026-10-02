@@ -3,7 +3,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Edit, Save, X } from 'lucide-react';
-import { SubcategoriaGasto2 } from '@/entities/SubcategoriaGasto2';
+import { dataClient } from '@/api/dataClient';
+const { SubcategoriaGasto2 } = dataClient.entities;
 
 export default function GerenciadorSubcategoria2({ categorias, subcategorias }) {
   const [subcategorias2, setSubcategorias2] = useState([]);

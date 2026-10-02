@@ -1,87 +1,35 @@
-import './App.css'
-import { Toaster } from "@/components/ui/toaster"
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClientInstance } from '@/lib/query-client'
-import VisualEditAgent from '@/lib/VisualEditAgent'
-import NavigationTracker from '@/lib/NavigationTracker'
-import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import './App.css';
+import { Toaster } from '@/components/ui/toaster';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClientInstance } from '@/lib/query-client';
+import { pagesConfig } from './pages.config';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import Login from '@/pages/Login';
+import SolicitarAcesso from '@/pages/SolicitarAcesso';
 import ManusAPIKey from '@/pages/ManusAPIKey';
-
-const { Pages, Layout, mainPage } = pagesConfig;
-const mainPageKey = mainPage ?? Object.keys(Pages)[0];
-const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
-
-const LayoutWrapper = ({ children, currentPageName }) => Layout ?
-  <Layout currentPageName={currentPageName}>{children}</Layout>
-  : <>{children}</>;
-
-const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
-
-  // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  // Handle authentication errors
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
-    }
-  }
-
-  // Render the main app
-  return (
-    <Routes>
-      <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
-      <Route path="/ManusAPIKey" element={<LayoutWrapper currentPageName="ManusAPIKey"><ManusAPIKey /></LayoutWrapper>} />
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
-  );
-};
-
-
-function App() {
-
-  return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <NavigationTracker />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-        <VisualEditAgent />
-      </QueryClientProvider>
-    </AuthProvider>
-  )
+function ProtectedApp() {
+  const auth = useAuth();
+  const location = useLocation();
+  if (auth.isLoadingAuth) return <div role="status" className="p-10 text-center">Carregando…</div>;
+  if (!auth.isConfigured) return <div className="min-h-screen grid place-items-center bg-slate-50 p-6"><div className="max-w-md rounded-xl bg-white p-8 shadow"><h1 className="text-xl font-bold">Sistema em configuração</h1><p className="mt-3 text-slate-600">A conexão com o banco de dados está sendo preparada. O acesso será liberado assim que a configuração for concluída.</p></div></div>;
+  if (auth.authError) return <div className="p-10 text-center"><h1 className="text-xl font-bold">{auth.authError.type === 'pending_approval' ? 'Acesso aguardando aprovação' : 'Não foi possível conectar'}</h1><p className="my-4">{auth.authError.type === 'pending_approval' ? auth.authError.message : 'Tente novamente em instantes. Se o problema continuar, procure o administrador.'}</p><button onClick={auth.checkAppState} className="mr-4 underline">Tentar novamente</button><button onClick={() => auth.logout()} className="underline">Sair</button>{auth.authError.type === 'pending_approval' && <a href="/SolicitarAcesso" className="ml-4 underline">Solicitar acesso</a>}</div>;
+  if (!auth.isAuthenticated) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`} replace />;
+  const { Pages, Layout, mainPage } = pagesConfig;
+  const MainPage = Pages[mainPage];
+  const wrap = Page => <Layout><Page /></Layout>;
+  return <Routes>
+    <Route path="/" element={wrap(MainPage)} />
+    {Object.entries(Pages).filter(([path]) => path !== 'SolicitarAcesso').map(([path, Page]) => <Route key={path} path={`/${path}`} element={path === 'GerenciamentoUsuarios' && auth.user.role !== 'admin' ? <Navigate to="/" replace /> : wrap(Page)} />)}
+    <Route path="/ManusAPIKey" element={auth.user.role === 'admin' ? wrap(ManusAPIKey) : <Navigate to="/" replace />} />
+    <Route path="*" element={<PageNotFound />} />
+  </Routes>;
 }
-
-export default App
+export default function App() {
+  return <AuthProvider><QueryClientProvider client={queryClientInstance}><BrowserRouter><Routes>
+    <Route path="/login" element={<Login />} />
+    <Route path="/SolicitarAcesso" element={<SolicitarAcesso />} />
+    <Route path="*" element={<ProtectedApp />} />
+  </Routes></BrowserRouter><Toaster /></QueryClientProvider></AuthProvider>;
+}

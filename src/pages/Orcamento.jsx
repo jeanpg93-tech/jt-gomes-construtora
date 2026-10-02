@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -23,9 +23,9 @@ export default function Orcamento() {
   const loadData = async () => {
     try {
       const [obrasData, gastosData, categoriasData] = await Promise.all([
-        base44.entities.Obra.list('-created_date'),
-        base44.entities.Gasto.list(),
-        base44.entities.CategoriaGasto.list()
+        dataClient.entities.Obra.list('-created_date'),
+        dataClient.entities.Gasto.list(),
+        dataClient.entities.CategoriaGasto.list()
       ]);
       
       setObras(obrasData);

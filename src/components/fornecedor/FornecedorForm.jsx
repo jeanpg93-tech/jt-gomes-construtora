@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { X, Save, Search } from "lucide-react";
 
 export default function FornecedorForm({ fornecedor, onSave, onCancel }) {
   const [formData, setFormData] = useState({
-    tipo: fornecedor?.tipo || 'fisica', // SEMPRE inicializa com um valor padrão
+    tipo: fornecedor ? (fornecedor.tipo || '') : 'fisica',
     nome: fornecedor?.nome || '',
     nome_fantasia: fornecedor?.nome_fantasia || '',
     cpf_cnpj: fornecedor?.cpf_cnpj || '',
@@ -154,9 +154,9 @@ export default function FornecedorForm({ fornecedor, onSave, onCancel }) {
 
     try {
       if (fornecedor?.id) {
-        await base44.entities.Fornecedor.update(fornecedor.id, dataToSave);
+        await dataClient.entities.Fornecedor.update(fornecedor.id, dataToSave);
       } else {
-        await base44.entities.Fornecedor.create(dataToSave);
+        await dataClient.entities.Fornecedor.create(dataToSave);
       }
       onSave();
     } catch (error) {

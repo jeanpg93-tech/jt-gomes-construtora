@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { AlertTriangle, Calendar, Clock, CheckCircle, ChevronDown, ChevronUp, CheckCircle2, Repeat } from "lucide-react";
 import { format, differenceInDays, isBefore, isToday, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 
 // Converte string "YYYY-MM-DD" para Date local correta (sem problemas de timezone)
 const parseLocalDate = (dateStr) => {
@@ -117,12 +117,12 @@ export default function PagamentosVencimento({ gastos, parcelas = [], onEditGast
     
     try {
       if (item.tipo === 'parcela') {
-        await base44.entities.ParcelaGasto.update(item.id, {
+        await dataClient.entities.ParcelaGasto.update(item.id, {
           status: 'pago',
           data_pagamento: dataPagamento
         });
       } else {
-        await base44.entities.Gasto.update(item.id, {
+        await dataClient.entities.Gasto.update(item.id, {
           status_pagamento: 'pago',
           data_pagamento: dataPagamento
         });

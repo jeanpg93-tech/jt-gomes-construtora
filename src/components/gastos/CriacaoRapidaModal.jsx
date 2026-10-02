@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,24 +26,24 @@ export default function CriacaoRapidaModal({ tipo, open, onOpenChange, onSuccess
       
       switch (tipo) {
         case 'categoria':
-          novoItem = await base44.entities.CategoriaGasto.create({ nome });
+          novoItem = await dataClient.entities.CategoriaGasto.create({ nome });
           break;
         case 'subcategoria':
           if (!categoriaId) {
             alert('Selecione uma categoria primeiro');
             return;
           }
-          novoItem = await base44.entities.SubcategoriaGasto.create({ nome, categoria_id: categoriaId });
+          novoItem = await dataClient.entities.SubcategoriaGasto.create({ nome, categoria_id: categoriaId });
           break;
         case 'etapa':
-          novoItem = await base44.entities.EtapaObra.create({ 
+          novoItem = await dataClient.entities.EtapaObra.create({
             nome, 
             descricao: descricao || null,
             ordem: ordem ? parseInt(ordem) : null 
           });
           break;
         case 'fornecedor':
-          novoItem = await base44.entities.Fornecedor.create({ 
+          novoItem = await dataClient.entities.Fornecedor.create({
             tipo: 'fisica',
             nome, 
             telefone: contato || null,

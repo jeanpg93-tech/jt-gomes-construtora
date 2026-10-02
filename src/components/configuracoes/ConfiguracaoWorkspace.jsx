@@ -1,3 +1,4 @@
+import FileImage from '@/components/FileImage';
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Upload, Save, Building2, Trash2 } from 'lucide-react';
 
 export default function ConfiguracaoWorkspace() {
@@ -62,7 +63,7 @@ export default function ConfiguracaoWorkspace() {
 
   const loadWorkspaceData = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await dataClient.auth.me();
       if (user) {
         setInitialWorkspaceData(user);
       }
@@ -119,7 +120,7 @@ export default function ConfiguracaoWorkspace() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await base44.auth.updateMe({
+      await dataClient.auth.updateMe({
         workspace_name: formData.name || null,
         workspace_logo: formData.logoUrl || null,
         construtora_razao_social: formData.construtora_razao_social || null,
@@ -158,7 +159,7 @@ export default function ConfiguracaoWorkspace() {
 
     setUploadingLogo(true);
     try {
-      const result = await base44.integrations.Core.UploadFile({ file });
+      const result = await dataClient.integrations.Core.UploadFile({ file });
       setFormData(prev => ({ ...prev, logoUrl: result.file_url }));
     } catch (error) {
       console.error('Erro ao fazer upload do logo:', error);
@@ -195,7 +196,7 @@ export default function ConfiguracaoWorkspace() {
           
           {formData.logoUrl && (
             <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border">
-              <img 
+              <FileImage
                 src={formData.logoUrl} 
                 alt="Logo atual" 
                 className="w-12 h-12 rounded-lg object-cover shadow-md"

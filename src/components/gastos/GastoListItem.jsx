@@ -1,3 +1,4 @@
+import { resolveFileUrl } from '@/api/dataClient';
 import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -231,9 +232,12 @@ export default function GastoListItem({ gasto, parcelas, obras, categorias, subc
                 variant="link"
                 size="sm"
                 className="h-auto p-0 text-blue-600"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation();
-                  window.open(gasto.arquivo_anexo, '_blank');
+                  const tab = window.open('', '_blank');
+                  if (tab) tab.opener = null;
+                  try { const url = await resolveFileUrl(gasto.arquivo_anexo); if (tab) tab.location.href = url; }
+                  catch { tab?.close(); alert('Não foi possível abrir o documento.'); }
                 }}
               >
                 <Download className="w-3 h-3 mr-1" />

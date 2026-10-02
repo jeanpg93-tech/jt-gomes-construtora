@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { dataClient } from "@/api/dataClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -143,9 +143,9 @@ export default function PessoaForm({ pessoa, onSave, onCancel }) {
 
     try {
       if (pessoa) {
-        await base44.entities.Pessoa.update(pessoa.id, dataToSave);
+        await dataClient.entities.Pessoa.update(pessoa.id, dataToSave);
       } else {
-        await base44.entities.Pessoa.create(dataToSave);
+        await dataClient.entities.Pessoa.create(dataToSave);
       }
       onSave();
     } catch (error) {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Edit, Save, X, ArrowUp, ArrowDown } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { dataClient } from '@/api/dataClient';
 
 export default function GerenciadorEtapaObra() {
   const [etapas, setEtapas] = useState([]);
@@ -18,7 +18,7 @@ export default function GerenciadorEtapaObra() {
   const loadEtapas = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.EtapaObra.list();
+      const data = await dataClient.entities.EtapaObra.list();
       const sortedData = data.sort((a, b) => (a.ordem || 999) - (b.ordem || 999));
       setEtapas(sortedData);
     } catch (error) {
@@ -32,7 +32,7 @@ export default function GerenciadorEtapaObra() {
     if (!newEtapa.nome.trim()) return;
     try {
       const maxOrdem = etapas.length > 0 ? Math.max(...etapas.map(e => e.ordem || 0)) : 0;
-      await base44.entities.EtapaObra.create({
+      await dataClient.entities.EtapaObra.create({
         nome: newEtapa.nome.trim(),
         descricao: newEtapa.descricao || null,
         ordem: maxOrdem + 1
@@ -46,7 +46,7 @@ export default function GerenciadorEtapaObra() {
 
   const handleDelete = async (id) => {
     try {
-      await base44.entities.EtapaObra.delete(id);
+      await dataClient.entities.EtapaObra.delete(id);
       await loadEtapas();
     } catch (error) {
       console.error('Erro ao excluir etapa:', error);
@@ -66,7 +66,7 @@ export default function GerenciadorEtapaObra() {
   const handleSaveEditing = async () => {
     if (!editingData.nome.trim() || !editingId) return;
     try {
-      await base44.entities.EtapaObra.update(editingId, {
+      await dataClient.entities.EtapaObra.update(editingId, {
         nome: editingData.nome.trim(),
         descricao: editingData.descricao || null,
         ordem: editingData.ordem || 0
@@ -85,8 +85,8 @@ export default function GerenciadorEtapaObra() {
     
     try {
       await Promise.all([
-        base44.entities.EtapaObra.update(newEtapas[index - 1].id, { ...newEtapas[index - 1], ordem: index }),
-        base44.entities.EtapaObra.update(newEtapas[index].id, { ...newEtapas[index], ordem: index + 1 })
+        dataClient.entities.EtapaObra.update(newEtapas[index - 1].id, { ...newEtapas[index - 1], ordem: index }),
+        dataClient.entities.EtapaObra.update(newEtapas[index].id, { ...newEtapas[index], ordem: index + 1 })
       ]);
       await loadEtapas();
     } catch (error) {
@@ -101,8 +101,8 @@ export default function GerenciadorEtapaObra() {
     
     try {
       await Promise.all([
-        base44.entities.EtapaObra.update(newEtapas[index].id, { ...newEtapas[index], ordem: index + 1 }),
-        base44.entities.EtapaObra.update(newEtapas[index + 1].id, { ...newEtapas[index + 1], ordem: index + 2 })
+        dataClient.entities.EtapaObra.update(newEtapas[index].id, { ...newEtapas[index], ordem: index + 1 }),
+        dataClient.entities.EtapaObra.update(newEtapas[index + 1].id, { ...newEtapas[index + 1], ordem: index + 2 })
       ]);
       await loadEtapas();
     } catch (error) {

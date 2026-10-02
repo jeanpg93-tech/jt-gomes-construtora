@@ -1,3 +1,4 @@
+import FileImage from '@/components/FileImage';
 import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -108,7 +109,7 @@ export default function ObraCard({ obra, onEdit, getStatusColor, getStatusLabel,
       {/* Foto da Obra */}
       {obra.foto_url && (
         <div className="relative h-48 overflow-hidden rounded-t-lg">
-          <img 
+          <FileImage
             src={obra.foto_url} 
             alt={obra.nome}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
